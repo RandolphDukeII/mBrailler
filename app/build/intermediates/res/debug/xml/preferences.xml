@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    <PreferenceCategory android:title="Input Language"></PreferenceCategory>
+
+    <PreferenceCategory android:title="Keyboard"></PreferenceCategory>
+
+    <PreferenceCategory android:title="Feedback"></PreferenceCategory>
+
+    <PreferenceCategory android:title="Text Correction"></PreferenceCategory>
+
+    <PreferenceCategory android:title="Logger"></PreferenceCategory>
+
+    <PreferenceCategory android:title="Gestures"></PreferenceCategory>
+
+
+</PreferenceScreen><!-- From: file:/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/src/main/res/xml/preferences.xml -->

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/libs/AmarinoLibrary_v0_55.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="6e529684291e11458a75a22b4499a54b5280321c">
+        <dex dex="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/build/intermediates/pre-dexed/debug/AmarinoLibrary_v0_55-c5404181782a584c61aa769d556892f60b5b0b9f.jar" />
+    </item>
+    <item
+        jar="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars/libs/internal_impl-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
+        <dex dex="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.3-aea6dc83369921797ed726ec899fe90a3eae3084.jar" />
+    </item>
+    <item
+        jar="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
+        <dex dex="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/build/intermediates/pre-dexed/debug/classes-e20f737ad0ab20e741ddb3b7af573b221239d4f2.jar" />
+    </item>
+    <item
+        jar="/Users/Duke/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.3/support-annotations-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
+        <dex dex="/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/build/intermediates/pre-dexed/debug/support-annotations-21.0.3-c992c5df9dc42ac6873afe952e9dc2e41dccbe46.jar" />
+    </item>
+
+</items>
