@@ -7,6 +7,7 @@
     android:orientation="horizontal"
     android:screenOrientation="landscape" 
     android:configChanges="orientation|keyboardHidden">
+
 </FrameLayout>
 
 <!-- From: file:/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/src/main/res/layout/keyboardui.xml -->

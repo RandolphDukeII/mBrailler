@@ -7,5 +7,6 @@
     android:orientation="horizontal"
     android:screenOrientation="landscape" 
     android:configChanges="orientation|keyboardHidden">
+
 </FrameLayout>
 

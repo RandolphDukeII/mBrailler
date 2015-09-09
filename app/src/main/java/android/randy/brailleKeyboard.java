@@ -12,9 +12,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
+import android.view.GestureDetector;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.VelocityTrackerCompat;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -28,7 +31,9 @@ import at.abraxas.amarino.Amarino;
 import at.abraxas.amarino.AmarinoIntent;
 
 @SuppressLint("DefaultLocale")
-public class brailleKeyboard extends InputMethodService
+public class brailleKeyboard extends InputMethodService implements
+		GestureDetector.OnGestureListener,
+		GestureDetector.OnDoubleTapListener
 {
 	
 	// inputView of the keyboard
@@ -47,13 +52,13 @@ public class brailleKeyboard extends InputMethodService
 	
 	//global number toggle flag for the number pad
 	boolean isNumberToggle=false;
-	
-	
+
 	/*
-	testing the gestures
-	private static final String DEBUG_TAG = "Velocity";
-	potential keyboard map of byte to character
-	*/
+	Gesture Testing
+	 */
+	private static final String DEBUG_TAG = "Gestures";
+	private GestureDetectorCompat mDetector;
+
 
 	private Map<Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
 	private Map <Integer, String> byteToKeyboardNumber = new HashMap<Integer, String>();
@@ -203,11 +208,31 @@ public class brailleKeyboard extends InputMethodService
     //sets the width and height of the device
     {
         super.onStartInputView(info, restarting);
+		// set fullscreen overlay
+        OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
 
-        // set fullscreen overlay
-       OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
+		// First create the GestureListener that will include all our callbacks.
+		// Then create the GestureDetector, which takes that listener as an argument.
+		GestureDetector.SimpleOnGestureListener gestureListener = new GestureListener();
+		final GestureDetector gd = new GestureDetector(this , gestureListener);
+
+        /* For the view where gestures will occur, create an onTouchListener that sends
+         * all motion events to the gesture detector.  When the gesture detector
+         * actually detects an event, it will use the callbacks you created in the
+         * SimpleOnGestureListener to alert your application.
+        */
+
+		mInputView.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View view, MotionEvent motionEvent) {
+				//this will determine what the touchEvents will produce
+				gd.onTouchEvent(motionEvent);
+				return false;
+			}
+		});
+
     }
-	
+
     @Override
 	public void onCreate()
     {
@@ -291,9 +316,62 @@ public class brailleKeyboard extends InputMethodService
     		getCurrentInputConnection().commitText(n, 1);	
     		}
     }
-  
-    
-   
+
+
+	@Override
+	public boolean onDown(MotionEvent event) {
+		Log.d(DEBUG_TAG,"onDown: " + event.toString());
+		return true;
+	}
+
+	@Override
+	public boolean onFling(MotionEvent event1, MotionEvent event2,
+						   float velocityX, float velocityY) {
+		Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+		return true;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+							float distanceY) {
+		Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
+		return true;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
+		return true;
+	}
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
+		return true;
+	}
+
 	@Override
     public void onDestroy(){
     	// disconnects to BT module
