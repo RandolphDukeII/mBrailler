@@ -26,7 +26,10 @@ import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
+import android.widget.TextView;
+
 import at.abraxas.amarino.Amarino;
 import at.abraxas.amarino.AmarinoIntent;
 
@@ -59,8 +62,12 @@ public class brailleKeyboard extends InputMethodService implements
 	private static final String DEBUG_TAG = "Gestures";
 	private GestureDetectorCompat mDetector;
 
+	//Finger position testing
+	private VelocityTracker mVelocityTracker = null;
 
-	private Map<Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
+
+
+	private Map <Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
 	private Map <Integer, String> byteToKeyboardNumber = new HashMap<Integer, String>();
 	
 
@@ -145,9 +152,14 @@ public class brailleKeyboard extends InputMethodService implements
         OverlayView = (FrameLayout)mInputView.findViewById(R.id.overlay);
         OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
 
-        // touch listener
-        //OverlayView.setOnTouchListener(mTouchListener);
-		
+
+		/*
+		* 	touch listener
+        *	OverlayView.setOnTouchListener(mTouchListener);
+		*/
+
+
+
         return mInputView;
 	}
 	
@@ -161,7 +173,7 @@ public class brailleKeyboard extends InputMethodService implements
     }
 
 /*
-	public View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+	public OnTouchListener mTouchListener = new OnTouchListener() {
 		//touch recognizers will be here
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -174,29 +186,29 @@ public class brailleKeyboard extends InputMethodService implements
             // actions
             switch(event.getAction() & MotionEvent.ACTION_MASK)
             {
-                case MotionEvent.ACTION_DOWN:
-                case MotionEvent.ACTION_POINTER_DOWN:
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                case MotionEvent.ACTION_MOVE: // a pointer was moved
+                case MotionEvent.ACTION_DOWN: Log.d(DEBUG_TAG, "ACTION_DOWN received"); break;
+                case MotionEvent.ACTION_POINTER_DOWN: Log.d(DEBUG_TAG, "ACTION_POINTER_DOWN received"); break;
+                case MotionEvent.ACTION_UP: Log.d(DEBUG_TAG, "ACTION_UP received"); break;
+                case MotionEvent.ACTION_POINTER_UP: Log.d(DEBUG_TAG, "ACTION_POINTER_UP received"); break;
+                case MotionEvent.ACTION_MOVE: Log.d(DEBUG_TAG, "ACTION_MOVE"); break; // a pointer was moved
             }
 
             return true;
         }
     };
+*/
 
-    */
   
 
     /**
      * Get pointer index
-     */
-   /* private int getIndex(MotionEvent event)
+    private int getIndex(MotionEvent event)
    {
 
         int idx = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
         return idx;
-    }*/
+    }
+	 */
     
     /**
      * This is called when the user starts editing a field.
@@ -211,10 +223,14 @@ public class brailleKeyboard extends InputMethodService implements
 		// set fullscreen overlay
         OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
 
+
+		//gestures
+
+
 		// First create the GestureListener that will include all our callbacks.
 		// Then create the GestureDetector, which takes that listener as an argument.
-		GestureDetector.SimpleOnGestureListener gestureListener = new GestureListener();
-		final GestureDetector gd = new GestureDetector(this , gestureListener);
+		/*GestureDetector.SimpleOnGestureListener gestureListener = new GestureListener();
+		final GestureDetector gd = new GestureDetector(this , gestureListener);*/
 
         /* For the view where gestures will occur, create an onTouchListener that sends
          * all motion events to the gesture detector.  When the gesture detector
@@ -222,14 +238,63 @@ public class brailleKeyboard extends InputMethodService implements
          * SimpleOnGestureListener to alert your application.
         */
 
-		mInputView.setOnTouchListener(new View.OnTouchListener() {
+		mInputView.setOnTouchListener(new OnTouchListener() {
+
+
 			@Override
 			public boolean onTouch(View view, MotionEvent motionEvent) {
-				//this will determine what the touchEvents will produce
-				gd.onTouchEvent(motionEvent);
-				return false;
+				// get finger count, event index and event id
+				int index = motionEvent.getActionIndex();
+				int action = motionEvent.getActionMasked();
+				int pointerId = motionEvent.getPointerId(index);
+
+				// actions
+				switch(action)
+				{
+					case MotionEvent.ACTION_DOWN:
+						if(mVelocityTracker == null) {
+							// Retrieve a new VelocityTracker object to watch the velocity of a motion.
+							mVelocityTracker = VelocityTracker.obtain();
+						}
+						else {
+							// Reset the velocity tracker back to its initial state.
+							mVelocityTracker.clear();
+						}
+						// Add a user's movement to the tracker.
+						mVelocityTracker.addMovement(motionEvent);
+						Log.d(DEBUG_TAG, "ACTION_DOWN received");
+						break;
+					case MotionEvent.ACTION_POINTER_DOWN:
+						Log.d(DEBUG_TAG, "ACTION_POINTER_DOWN received");
+						break;
+					case MotionEvent.ACTION_UP:
+						Log.d(DEBUG_TAG, "ACTION_UP received");
+						break;
+					case MotionEvent.ACTION_POINTER_UP:
+						Log.d(DEBUG_TAG, "ACTION_POINTER_UP received");
+						break;
+					case MotionEvent.ACTION_MOVE:
+						mVelocityTracker.addMovement(motionEvent);
+						// When you want to determine the velocity, call
+						// computeCurrentVelocity(). Then call getXVelocity()
+						// and getYVelocity() to retrieve the velocity for each pointer ID.
+						mVelocityTracker.computeCurrentVelocity(1000);
+						// Log velocity of pixels per second
+						// Best practice to use VelocityTrackerCompat where possible.
+						Log.d("", "X velocity: " +
+								VelocityTrackerCompat.getXVelocity(mVelocityTracker,
+										pointerId));
+						Log.d("", "Y velocity: " +
+								VelocityTrackerCompat.getYVelocity(mVelocityTracker,
+										pointerId));
+						break; // a pointer was moved
+
+				}
+
+				return true;
 			}
 		});
+
 
     }
 
