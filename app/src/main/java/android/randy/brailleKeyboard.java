@@ -56,9 +56,7 @@ public class brailleKeyboard extends InputMethodService implements
 	//global number toggle flag for the number pad
 	boolean isNumberToggle=false;
 
-	/*
-	Gesture Testing
-	 */
+	//Gesture Testing
 	private static final String DEBUG_TAG = "Gestures";
 	private GestureDetectorCompat mDetector;
 
@@ -152,14 +150,6 @@ public class brailleKeyboard extends InputMethodService implements
         OverlayView = (FrameLayout)mInputView.findViewById(R.id.overlay);
         OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
 
-
-		/*
-		* 	touch listener
-        *	OverlayView.setOnTouchListener(mTouchListener);
-		*/
-
-
-
         return mInputView;
 	}
 	
@@ -224,13 +214,15 @@ public class brailleKeyboard extends InputMethodService implements
         OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
 
 
+		//mDetector = new GestureDetectorCompat(this, new MyGestureListener());
 		//gestures
 
 
 		// First create the GestureListener that will include all our callbacks.
 		// Then create the GestureDetector, which takes that listener as an argument.
 		/*GestureDetector.SimpleOnGestureListener gestureListener = new GestureListener();
-		final GestureDetector gd = new GestureDetector(this , gestureListener);*/
+		final GestureDetector mDetector = new GestureDetector(this , gestureListener);
+		*/
 
         /* For the view where gestures will occur, create an onTouchListener that sends
          * all motion events to the gesture detector.  When the gesture detector
@@ -251,6 +243,7 @@ public class brailleKeyboard extends InputMethodService implements
 				// actions
 				switch(action)
 				{
+					//for swiping to move the text caret
 					case MotionEvent.ACTION_DOWN:
 						if(mVelocityTracker == null) {
 							// Retrieve a new VelocityTracker object to watch the velocity of a motion.
@@ -264,15 +257,22 @@ public class brailleKeyboard extends InputMethodService implements
 						mVelocityTracker.addMovement(motionEvent);
 						Log.d(DEBUG_TAG, "ACTION_DOWN received");
 						break;
+
+					//used to toggle modes depending on whether the finger is on the left or the right side
 					case MotionEvent.ACTION_POINTER_DOWN:
 						Log.d(DEBUG_TAG, "ACTION_POINTER_DOWN received");
 						break;
+
 					case MotionEvent.ACTION_UP:
 						Log.d(DEBUG_TAG, "ACTION_UP received");
 						break;
+
+					//will return to text caret navigation mode
 					case MotionEvent.ACTION_POINTER_UP:
 						Log.d(DEBUG_TAG, "ACTION_POINTER_UP received");
 						break;
+
+					//depends on whether a single finger is already down
 					case MotionEvent.ACTION_MOVE:
 						mVelocityTracker.addMovement(motionEvent);
 						// When you want to determine the velocity, call
@@ -288,6 +288,11 @@ public class brailleKeyboard extends InputMethodService implements
 								VelocityTrackerCompat.getYVelocity(mVelocityTracker,
 										pointerId));
 						break; // a pointer was moved
+
+					case MotionEvent.ACTION_CANCEL:
+						// Return a VelocityTracker object back to be re-used by others.
+						mVelocityTracker.recycle();
+						break;
 
 				}
 
@@ -392,7 +397,7 @@ public class brailleKeyboard extends InputMethodService implements
 	@Override
 	public boolean onFling(MotionEvent event1, MotionEvent event2,
 						   float velocityX, float velocityY) {
-		Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+		Log.d(DEBUG_TAG, "onFling: " + event1.toString()+ event2.toString());
 		return true;
 	}
 

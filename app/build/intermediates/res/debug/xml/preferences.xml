@@ -1,17 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    
-    <PreferenceCategory android:title="Input Language"></PreferenceCategory>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="Input Language"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
-    <PreferenceCategory android:title="Keyboard"></PreferenceCategory>
+    <PreferenceCategory
+        android:title="Keyboard"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
-    <PreferenceCategory android:title="Feedback"></PreferenceCategory>
+    <PreferenceCategory
+        android:title="Feedback"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
-    <PreferenceCategory android:title="Text Correction"></PreferenceCategory>
+    <PreferenceCategory
+        android:title="Gestures"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
-    <PreferenceCategory android:title="Logger"></PreferenceCategory>
+    <PreferenceCategory
+        android:title="Text Correction"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
-    <PreferenceCategory android:title="Gestures"></PreferenceCategory>
+    <PreferenceCategory
+        android:title="Logger"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="Testing"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Testing"
+        android:key="pref_key_storage_settings">
+        <CheckBoxPreference
+            android:key="pref_key_auto_delete"
+            android:summary="one"
+            android:title=""
+            android:defaultValue="false" />
+        <Preference
+            android:key="pref_key_sms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="two" />
+        <Preference
+            android:key="pref_key_mms_delete_limit"
+            android:dependency="pref_key_auto_delete"
+            android:summary=""
+            android:title="three" />
+    </PreferenceCategory>
 
 </PreferenceScreen><!-- From: file:/Users/Duke/StudioProjects/mobileBrailleKeyboard/app/src/main/res/xml/preferences.xml -->
