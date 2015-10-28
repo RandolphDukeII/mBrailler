@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
+import android.text.Spannable;
 import android.view.GestureDetector;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.VelocityTrackerCompat;
@@ -27,11 +28,14 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import at.abraxas.amarino.Amarino;
 import at.abraxas.amarino.AmarinoIntent;
+
+
 
 @SuppressLint("DefaultLocale")
 public class brailleKeyboard extends InputMethodService implements
@@ -44,7 +48,7 @@ public class brailleKeyboard extends InputMethodService implements
 	private int mWidth = 0;
 	private int mHeight = 0;
 	public FrameLayout OverlayView;
-	
+
 	// connection to the Arduino
 	private static final String TAG = "mBrailler";
 	private static final String DEVICE_ADDRESS= "00:06:66:4E:9B:F0";
@@ -69,9 +73,8 @@ public class brailleKeyboard extends InputMethodService implements
 	private Map <Integer, String> byteToKeyboardNumber = new HashMap<Integer, String>();
 	
 
-	public brailleKeyboard()
-    {
-        //letters for US English
+	public brailleKeyboard() {
+		//letters for US English
 		byteToKeyboardCharacter.put(32, "A");
 		byteToKeyboardCharacter.put(48, "B");
 		byteToKeyboardCharacter.put(36, "C");
@@ -102,7 +105,7 @@ public class brailleKeyboard extends InputMethodService implements
 		//space button
 		byteToKeyboardCharacter.put(64, " ");
 
-        //symbols
+		//symbols
 		byteToKeyboardCharacter.put(16, ",");
 		byteToKeyboardCharacter.put(24, ";");
 		byteToKeyboardCharacter.put(18, ":");
@@ -114,17 +117,17 @@ public class brailleKeyboard extends InputMethodService implements
 		byteToKeyboardCharacter.put(8, "'");
 		byteToKeyboardCharacter.put(9, "-");
 
-        //delete button KEYCODE_DELETE
+		//delete button KEYCODE_DELETE
 		byteToKeyboardCharacter.put(128, "Delete");
 
-        //shift button KEYCODE_SHIFT_RIGHT
+		//shift button KEYCODE_SHIFT_RIGHT
 		byteToKeyboardCharacter.put(1, "Shift");
 
-        //number toggle KEYCODE_NUM
+		//number toggle KEYCODE_NUM
 		byteToKeyboardCharacter.put(15, "Number Toggle");
 		byteToKeyboardNumber.put(15, "Number Toggle");
 
-        //numbers
+		//numbers
 		byteToKeyboardNumber.put(22, "0");
 		byteToKeyboardNumber.put(32, "1");
 		byteToKeyboardNumber.put(48, "2");
@@ -135,8 +138,140 @@ public class brailleKeyboard extends InputMethodService implements
 		byteToKeyboardNumber.put(54, "7");
 		byteToKeyboardNumber.put(50, "8");
 		byteToKeyboardNumber.put(20, "9");
-		
 	}
+
+		public boolean onTouchEvent(MotionEvent event){
+		this.mDetector.onTouchEvent(event);
+		// Be sure to call the superclass implementation
+		return super.onGenericMotionEvent(event);
+	}
+
+		@Override
+		public boolean onDown(MotionEvent event) {
+
+			float locationOfX = event.getRawX();
+			float centerOfScreen = (mWidth/2);
+
+			if (event.getPointerCount()<1) {
+				if (centerOfScreen > locationOfX) {
+					Log.d(DEBUG_TAG, "Left onDown: " + event.toString());
+				} else {
+					Log.d(DEBUG_TAG, "Right onDown: " + event.toString());
+				}
+				return true;
+			}
+
+		return true;
+	}
+
+		@Override
+		public boolean onFling(MotionEvent event1, MotionEvent event2,
+		float velocityX, float velocityY) {
+		Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+		return true;
+	}
+
+		@Override
+		public void onLongPress(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onLongPress: " +event.getDownTime() +event.toString());
+	}
+
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+		float distanceY) {
+
+			float BeginningX = e1.getX();
+			float BeginningY = e1.getY();
+
+			float EndingX = e2.getX();
+			float EndingY = e2.getY();
+
+			float movementOfX = EndingX - BeginningX;
+
+			//will contain the swipe gestures
+			/*
+			switch () {
+			}
+			*/
+
+			Log.d(DEBUG_TAG, "onScroll: " + e1.toString() + e2.toString());
+		return true;
+	}
+
+		@Override
+		public void onShowPress(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+	}
+
+		@Override
+		public boolean onSingleTapUp(MotionEvent event) {
+
+			float locationOfX = event.getRawX();
+			float centerOfScreen = (mWidth/2);
+
+			if (event.getPointerCount()<1) {
+				if (centerOfScreen > locationOfX) {
+					Log.d(DEBUG_TAG, "Left onSingleTapUp: " + event.toString());
+				} else {
+					Log.d(DEBUG_TAG, "Right onSingleTapUp: " + event.toString());
+				}
+				return true;
+			}
+
+			return false;
+	}
+
+		@Override
+		public boolean onDoubleTap(MotionEvent event) {
+				Log.d(DEBUG_TAG,"onDoubleTap: " + event.toString());
+
+		return true;
+	}
+
+		@Override
+		public boolean onDoubleTapEvent(MotionEvent event) {
+
+			float locationOfX = event.getRawX();
+			float centerOfScreen = (mWidth/2);
+
+			if (centerOfScreen > locationOfX)
+			{
+				//double tap on the left causes cursor to move left
+
+				//having difficulty identifying the proper method here using KEYCODE_SOFT_LEFT
+
+				Log.d(DEBUG_TAG, "Left onDoubleTapEvent: " + event.toString());
+			}
+			else
+			{
+
+				//double tap on the right causes cursor to move right
+
+				//having difficulty identifying the proper method here using KEYCODE_SOFT_RIGHT
+
+				Log.d(DEBUG_TAG,"Right onDoubleTapEvent: " + event.toString());
+			}
+
+		return true;
+	}
+
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent event) {
+			float locationOfX = event.getRawX();
+			float centerOfScreen = (mWidth/2);
+
+			if (centerOfScreen > locationOfX)
+			{
+				Log.d(DEBUG_TAG,"Left onSingleTapConfirmed: " + event.toString());
+			}
+			else
+			{
+				Log.d(DEBUG_TAG,"Right onSingleTapConfirmed: " + event.toString());
+			}
+		return true;
+	}
+		
+
 	
 	@Override
 	public View onCreateInputView()
@@ -145,6 +280,11 @@ public class brailleKeyboard extends InputMethodService implements
         mInputView = (View) getLayoutInflater().inflate(R.layout.keyboardui, null);
 
         updateWindowSize();
+
+		mDetector = new GestureDetectorCompat(this,this);
+		// Set the gesture detector as the double tap
+		// listener.
+		mDetector.setOnDoubleTapListener(this);
 
         // set fullscreen overlay
         OverlayView = (FrameLayout)mInputView.findViewById(R.id.overlay);
@@ -162,35 +302,7 @@ public class brailleKeyboard extends InputMethodService implements
         mHeight=display.getHeight();
     }
 
-/*
-	public OnTouchListener mTouchListener = new OnTouchListener() {
-		//touch recognizers will be here
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-
-            // get finger count, event index and event id
-            int countFingers = event.getPointerCount();
-            int index = getIndex(event);
-            int id = event.getPointerId(index);
-
-            // actions
-            switch(event.getAction() & MotionEvent.ACTION_MASK)
-            {
-                case MotionEvent.ACTION_DOWN: Log.d(DEBUG_TAG, "ACTION_DOWN received"); break;
-                case MotionEvent.ACTION_POINTER_DOWN: Log.d(DEBUG_TAG, "ACTION_POINTER_DOWN received"); break;
-                case MotionEvent.ACTION_UP: Log.d(DEBUG_TAG, "ACTION_UP received"); break;
-                case MotionEvent.ACTION_POINTER_UP: Log.d(DEBUG_TAG, "ACTION_POINTER_UP received"); break;
-                case MotionEvent.ACTION_MOVE: Log.d(DEBUG_TAG, "ACTION_MOVE"); break; // a pointer was moved
-            }
-
-            return true;
-        }
-    };
-*/
-
-  
-
-    /**
+	/**
      * Get pointer index
     private int getIndex(MotionEvent event)
    {
@@ -213,95 +325,32 @@ public class brailleKeyboard extends InputMethodService implements
 		// set fullscreen overlay
         OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
 
-
-		//mDetector = new GestureDetectorCompat(this, new MyGestureListener());
-		//gestures
-
-
-		// First create the GestureListener that will include all our callbacks.
-		// Then create the GestureDetector, which takes that listener as an argument.
-		/*GestureDetector.SimpleOnGestureListener gestureListener = new GestureListener();
-		final GestureDetector mDetector = new GestureDetector(this , gestureListener);
-		*/
-
-        /* For the view where gestures will occur, create an onTouchListener that sends
-         * all motion events to the gesture detector.  When the gesture detector
-         * actually detects an event, it will use the callbacks you created in the
-         * SimpleOnGestureListener to alert your application.
-        */
-
 		mInputView.setOnTouchListener(new OnTouchListener() {
-
 
 			@Override
 			public boolean onTouch(View view, MotionEvent motionEvent) {
-				// get finger count, event index and event id
-				int index = motionEvent.getActionIndex();
-				int action = motionEvent.getActionMasked();
-				int pointerId = motionEvent.getPointerId(index);
 
-				// actions
-				switch(action)
-				{
-					//for swiping to move the text caret
-					case MotionEvent.ACTION_DOWN:
-						if(mVelocityTracker == null) {
-							// Retrieve a new VelocityTracker object to watch the velocity of a motion.
-							mVelocityTracker = VelocityTracker.obtain();
-						}
-						else {
-							// Reset the velocity tracker back to its initial state.
-							mVelocityTracker.clear();
-						}
-						// Add a user's movement to the tracker.
-						mVelocityTracker.addMovement(motionEvent);
-						Log.d(DEBUG_TAG, "ACTION_DOWN received");
-						break;
+				//splits the screen by the y-axis
+				float locationOfX = motionEvent.getX();
+				float centerOfScreen = (mWidth/2);
 
-					//used to toggle modes depending on whether the finger is on the left or the right side
-					case MotionEvent.ACTION_POINTER_DOWN:
-						Log.d(DEBUG_TAG, "ACTION_POINTER_DOWN received");
-						break;
+				//need to adjust the logic here to acknowledge multitouch events here
 
-					case MotionEvent.ACTION_UP:
-						Log.d(DEBUG_TAG, "ACTION_UP received");
-						break;
-
-					//will return to text caret navigation mode
-					case MotionEvent.ACTION_POINTER_UP:
-						Log.d(DEBUG_TAG, "ACTION_POINTER_UP received");
-						break;
-
-					//depends on whether a single finger is already down
-					case MotionEvent.ACTION_MOVE:
-						mVelocityTracker.addMovement(motionEvent);
-						// When you want to determine the velocity, call
-						// computeCurrentVelocity(). Then call getXVelocity()
-						// and getYVelocity() to retrieve the velocity for each pointer ID.
-						mVelocityTracker.computeCurrentVelocity(1000);
-						// Log velocity of pixels per second
-						// Best practice to use VelocityTrackerCompat where possible.
-						Log.d("", "X velocity: " +
-								VelocityTrackerCompat.getXVelocity(mVelocityTracker,
-										pointerId));
-						Log.d("", "Y velocity: " +
-								VelocityTrackerCompat.getYVelocity(mVelocityTracker,
-										pointerId));
-						break; // a pointer was moved
-
-					case MotionEvent.ACTION_CANCEL:
-						// Return a VelocityTracker object back to be re-used by others.
-						mVelocityTracker.recycle();
-						break;
-
+				if (motionEvent.getPointerCount()>1){
+					onTouchEvent(motionEvent);
+					return true;
 				}
 
-				return true;
+				else {
+					onTouchEvent(motionEvent);
+					return true;
+				}
+
 			}
 		});
 
-
     }
+
 
     @Override
 	public void onCreate()
@@ -386,61 +435,6 @@ public class brailleKeyboard extends InputMethodService implements
     		getCurrentInputConnection().commitText(n, 1);	
     		}
     }
-
-
-	@Override
-	public boolean onDown(MotionEvent event) {
-		Log.d(DEBUG_TAG,"onDown: " + event.toString());
-		return true;
-	}
-
-	@Override
-	public boolean onFling(MotionEvent event1, MotionEvent event2,
-						   float velocityX, float velocityY) {
-		Log.d(DEBUG_TAG, "onFling: " + event1.toString()+ event2.toString());
-		return true;
-	}
-
-	@Override
-	public void onLongPress(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
-	}
-
-	@Override
-	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-							float distanceY) {
-		Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
-		return true;
-	}
-
-	@Override
-	public void onShowPress(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
-	}
-
-	@Override
-	public boolean onSingleTapUp(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
-		return true;
-	}
-
-	@Override
-	public boolean onDoubleTap(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
-		return true;
-	}
-
-	@Override
-	public boolean onDoubleTapEvent(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
-		return true;
-	}
-
-	@Override
-	public boolean onSingleTapConfirmed(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
-		return true;
-	}
 
 	@Override
     public void onDestroy(){
