@@ -149,6 +149,12 @@ public class brailleKeyboard extends InputMethodService implements
 			int pointerId = event.getPointerId(index);
 
 			//put the getX and getY local variables
+			float locationOfX = event.getX();
+			float locationOfY = event.getY();
+
+			float centerOfScreen = (mWidth/2);
+
+			float xAxis = (mHeight/2);
 
 
 			mDetector = new GestureDetectorCompat(this, this);
@@ -170,7 +176,22 @@ public class brailleKeyboard extends InputMethodService implements
 					}
 					// Add a user's movement to the tracker.
 					mVelocityTracker.addMovement(event);
+					Log.d("", "Action Down Exists at x= "+event.getX()+" and y= "+event.getY());
 					break;
+
+				case MotionEvent.ACTION_POINTER_DOWN:
+					mVelocityTracker.addMovement(event);
+
+						if (centerOfScreen > locationOfX) {
+							Log.d(DEBUG_TAG, "Left Side");
+						}
+						else {
+							Log.d(DEBUG_TAG, "Right Side");
+						}
+					Log.d("", "There are "+event.getPointerCount()+" fingers down.");
+					Log.d("", "Action_Pointer_Down Exists at x= "+event.getX()+"and y= "+event.getY());
+					break;
+
 				case MotionEvent.ACTION_MOVE:
 					mVelocityTracker.addMovement(event);
 					// When you want to determine the velocity, call
@@ -186,12 +207,20 @@ public class brailleKeyboard extends InputMethodService implements
 							VelocityTrackerCompat.getYVelocity(mVelocityTracker,
 									pointerId));
 					break;
+
 				case MotionEvent.ACTION_UP:
+					break;
+
+				case MotionEvent.ACTION_POINTER_UP:
 					break;
 
 				case MotionEvent.ACTION_CANCEL:
 					// Return a VelocityTracker object back to be re-used by others.
 					mVelocityTracker.recycle();
+					break;
+
+				default :
+					onDoubleTap(event);
 					break;
 
 
@@ -208,57 +237,26 @@ public class brailleKeyboard extends InputMethodService implements
 			//}
 		}
 
-		@Override
+
+	@Override
 		public boolean onDown(MotionEvent event) {
-
-			float locationOfX = event.getRawX();
-			float centerOfScreen = (mWidth/2);
-
-			if (event.getPointerCount()<1) {
-				if (centerOfScreen > locationOfX) {
-					Log.d(DEBUG_TAG, "Left onDown: " + event.toString());
-				} else {
-					Log.d(DEBUG_TAG, "Right onDown: " + event.toString());
-				}
-				return true;
-			}
-
 		return true;
 	}
+
 
 		@Override
 		public boolean onFling(MotionEvent event1, MotionEvent event2,
 		float velocityX, float velocityY) {
-		Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
 		return true;
 	}
 
 		@Override
 		public void onLongPress(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onLongPress: " +event.getDownTime() +event.toString());
 	}
 
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 		float distanceY) {
-
-			// probably just take the floats from here
-
-			float BeginningX = e1.getX();
-			float BeginningY = e1.getY();
-
-			float EndingX = e2.getX();
-			float EndingY = e2.getY();
-
-			float movementOfX = EndingX - BeginningX;
-
-			//will contain the swipe gestures
-			/*
-			switch () {
-			}
-			*/
-
-			Log.d(DEBUG_TAG, "onScroll: " + e1.toString() + e2.toString());
 		return true;
 	}
 
@@ -269,26 +267,12 @@ public class brailleKeyboard extends InputMethodService implements
 
 		@Override
 		public boolean onSingleTapUp(MotionEvent event) {
-
-			float locationOfX = event.getRawX();
-			float centerOfScreen = (mWidth/2);
-
-			if (event.getPointerCount()<1) {
-				if (centerOfScreen > locationOfX) {
-					Log.d(DEBUG_TAG, "Left onSingleTapUp: " + event.toString());
-				} else {
-					Log.d(DEBUG_TAG, "Right onSingleTapUp: " + event.toString());
-				}
-				return true;
-			}
-
-			return false;
+		return true;
 	}
 
 		@Override
 		public boolean onDoubleTap(MotionEvent event) {
 				Log.d(DEBUG_TAG,"onDoubleTap: " + event.toString());
-
 		return true;
 	}
 
@@ -313,7 +297,8 @@ public class brailleKeyboard extends InputMethodService implements
 				//double tap on the right causes cursor to move right
 
 				//having difficulty identifying the proper method here using KEYCODE_SOFT_RIGHT
-
+				CharSequence textBeforeCursor;
+				textBeforeCursor = getCurrentInputConnection().getTextBeforeCursor(-1,0);
 				Log.d(DEBUG_TAG,"Right onDoubleTapEvent: " + event.toString());
 			}
 
