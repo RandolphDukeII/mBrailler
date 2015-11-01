@@ -65,8 +65,8 @@ public class brailleKeyboard extends InputMethodService implements
 	private GestureDetectorCompat mDetector;
 
 	//Finger position testing
+	private static final String DEBUG = "Velocity";
 	private VelocityTracker mVelocityTracker = null;
-
 
 
 	private Map <Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
@@ -140,11 +140,73 @@ public class brailleKeyboard extends InputMethodService implements
 		byteToKeyboardNumber.put(20, "9");
 	}
 
-		public boolean onTouchEvent(MotionEvent event){
-		this.mDetector.onTouchEvent(event);
-		// Be sure to call the superclass implementation
-		return super.onGenericMotionEvent(event);
-	}
+		public boolean onTouchEvent(MotionEvent event) {
+
+			//where I will be implementing the switches based on fingers down
+
+			int index = event.getActionIndex();
+			int action = event.getActionMasked();
+			int pointerId = event.getPointerId(index);
+
+			//put the getX and getY local variables
+
+
+			mDetector = new GestureDetectorCompat(this, this);
+			// Set the gesture detector as the double tap
+			// listener.
+			mDetector.setOnDoubleTapListener(this);
+
+
+
+			switch(action) {
+				case MotionEvent.ACTION_DOWN:
+					if(mVelocityTracker == null) {
+						// Retrieve a new VelocityTracker object to watch the velocity of a motion.
+						mVelocityTracker = VelocityTracker.obtain();
+					}
+					else {
+						// Reset the velocity tracker back to its initial state.
+						mVelocityTracker.clear();
+					}
+					// Add a user's movement to the tracker.
+					mVelocityTracker.addMovement(event);
+					break;
+				case MotionEvent.ACTION_MOVE:
+					mVelocityTracker.addMovement(event);
+					// When you want to determine the velocity, call
+					// computeCurrentVelocity(). Then call getXVelocity()
+					// and getYVelocity() to retrieve the velocity for each pointer ID.
+					mVelocityTracker.computeCurrentVelocity(1000);
+					// Log velocity of pixels per second
+					// Best practice to use VelocityTrackerCompat where possible.
+					Log.d("", "X velocity: " +
+							VelocityTrackerCompat.getXVelocity(mVelocityTracker,
+									pointerId));
+					Log.d("", "Y velocity: " +
+							VelocityTrackerCompat.getYVelocity(mVelocityTracker,
+									pointerId));
+					break;
+				case MotionEvent.ACTION_UP:
+					break;
+
+				case MotionEvent.ACTION_CANCEL:
+					// Return a VelocityTracker object back to be re-used by others.
+					mVelocityTracker.recycle();
+					break;
+
+
+			}
+			return true;
+		}
+
+		public boolean gestureAction (MotionEvent startOfEvent, MotionEvent endOfEvent, float x1, float y1, float x2, float y2){
+		// where I want to put the table of gestures to act upon
+
+
+			//switch(){
+				return true;
+			//}
+		}
 
 		@Override
 		public boolean onDown(MotionEvent event) {
@@ -167,7 +229,7 @@ public class brailleKeyboard extends InputMethodService implements
 		@Override
 		public boolean onFling(MotionEvent event1, MotionEvent event2,
 		float velocityX, float velocityY) {
-		Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+		Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
 		return true;
 	}
 
@@ -179,6 +241,8 @@ public class brailleKeyboard extends InputMethodService implements
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 		float distanceY) {
+
+			// probably just take the floats from here
 
 			float BeginningX = e1.getX();
 			float BeginningY = e1.getY();
@@ -240,6 +304,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 				//having difficulty identifying the proper method here using KEYCODE_SOFT_LEFT
 
+				//textView.setImeOptions(EditorInfo.IME_ACTION_DONE);
 				Log.d(DEBUG_TAG, "Left onDoubleTapEvent: " + event.toString());
 			}
 			else
@@ -281,10 +346,12 @@ public class brailleKeyboard extends InputMethodService implements
 
         updateWindowSize();
 
+
 		mDetector = new GestureDetectorCompat(this,this);
 		// Set the gesture detector as the double tap
 		// listener.
 		mDetector.setOnDoubleTapListener(this);
+
 
         // set fullscreen overlay
         OverlayView = (FrameLayout)mInputView.findViewById(R.id.overlay);
@@ -332,20 +399,13 @@ public class brailleKeyboard extends InputMethodService implements
 
 				//splits the screen by the y-axis
 				float locationOfX = motionEvent.getX();
-				float centerOfScreen = (mWidth/2);
+				float centerOfScreen = (mWidth / 2);
 
 				//need to adjust the logic here to acknowledge multitouch events here
 
-				if (motionEvent.getPointerCount()>1){
 					onTouchEvent(motionEvent);
-					return true;
-				}
 
-				else {
-					onTouchEvent(motionEvent);
-					return true;
-				}
-
+				return true;
 			}
 		});
 
@@ -399,6 +459,10 @@ public class brailleKeyboard extends InputMethodService implements
 		}
     }
 
+	public void touchAction ()
+	{
+
+	}
     
     @SuppressLint("DefaultLocale")
 	public void sendKeyChar(int data)
