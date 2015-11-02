@@ -171,6 +171,7 @@ public class brailleKeyboard extends InputMethodService implements
 						}
 						// Add a user's movement to the tracker.
 						mVelocityTracker.addMovement(event);
+						boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",-1);
 						Log.d("", "Left Action Down Exists at x= " + event.getX() + " and y= " + event.getY());
 						break;
 
@@ -244,6 +245,7 @@ public class brailleKeyboard extends InputMethodService implements
 						}
 						// Add a user's movement to the tracker.
 						mVelocityTracker.addMovement(event);
+						boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",2);
 						Log.d("", "Right Action Down Exists at x= " + event.getX() + " and y= " + event.getY());
 						break;
 
@@ -273,7 +275,7 @@ public class brailleKeyboard extends InputMethodService implements
 								Log.d("", "Pointer "+pointerId+"X velocity: " +
 										VelocityTrackerCompat.getXVelocity(mVelocityTracker,
 												pointerId));
-								Log.d("", "Pointer "+pointerId+"Y velocity: " +
+								Log.d("", "Pointer " + pointerId + "Y velocity: " +
 										VelocityTrackerCompat.getYVelocity(mVelocityTracker,
 												pointerId));
 						break;
@@ -376,8 +378,7 @@ public class brailleKeyboard extends InputMethodService implements
 				//double tap on the right causes cursor to move right
 
 				//having difficulty identifying the proper method here using KEYCODE_SOFT_RIGHT
-				CharSequence textBeforeCursor;
-				textBeforeCursor = getCurrentInputConnection().getTextBeforeCursor(-1,0);
+				//CharSequence textBeforeCursor = getCurrentInputConnection().getTextBeforeCursor(-1,0);
 				Log.d(DEBUG_TAG,"Right onDoubleTapEvent: " + event.toString());
 			}
 
@@ -452,12 +453,13 @@ public class brailleKeyboard extends InputMethodService implements
 				//splits the screen by the y-axis
 				float locationOfX = motionEvent.getX();
 				float YAxis = (mWidth / 2);
+				int allPointers = motionEvent.getPointerCount();
 
 				//need to adjust the logic here to acknowledge multitouch events here
+				//I want to find a way to loop for all pointers here, but I cannot
+					onTouchEvent(motionEvent);
+					return true;
 
-				onTouchEvent(motionEvent);
-
-				return true;
 			}
 		});
 
