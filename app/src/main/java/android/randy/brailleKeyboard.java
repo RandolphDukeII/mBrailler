@@ -139,184 +139,92 @@ public class brailleKeyboard extends InputMethodService implements
 		byteToKeyboardNumber.put(20, "9");
 	}
 
-		public boolean onTouchEvent(MotionEvent event) {
+	public boolean onTouchEvent(MotionEvent event) {
 
-			//where I will be implementing the switches based on fingers down
+		//where I will be implementing the switches based on fingers down
 
-			int index = event.getActionIndex();
-			int action = event.getActionMasked();
-			int pointerId = event.getPointerId(index);
-			int allPointers = event.getPointerCount();
+		int index = event.getActionIndex();
+		int action = event.getActionMasked();
+		int pointerId = event.getPointerId(index);
+		int allPointers = event.getPointerCount();
 
-			//put the getX and getY local variables
-			float locationOfX = event.getX();
-			float locationOfY = event.getY();
+		//put the getX and getY local variables
+		float locationOfX = event.getX();
+		float locationOfY = event.getY();
 
-			float YAxis = (mWidth/2);
+		float YAxis = (mWidth/2);
 
-			float XAxis = (mHeight/2);
-
-
-			//still working out how to get the Action_Up and Action_Pointer_Up to help in recoginizing the pointer locations
-			if (locationOfX < YAxis) {
-				switch (action  & MotionEvent.ACTION_MASK) {
-					case MotionEvent.ACTION_DOWN:
-						if (mVelocityTracker == null) {
-							// Retrieve a new VelocityTracker object to watch the velocity of a motion.
-							mVelocityTracker = VelocityTracker.obtain();
-						} else {
-							// Reset the velocity tracker back to its initial state.
-							mVelocityTracker.clear();
-						}
-						// Add a user's movement to the tracker.
-						mVelocityTracker.addMovement(event);
-						boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",-1);
-						Log.d("", "Left Action Down Exists at x= " + event.getX() + " and y= " + event.getY());
-						break;
-
-					case MotionEvent.ACTION_POINTER_DOWN:
-						mVelocityTracker.addMovement(event);
-						Log.d("", "There are " + allPointers + " fingers down.");
-						Log.d("", "Action_Pointer_Down Exists at x= " + event.getX() + "and y= " + event.getY());
-						if (event.getX() < YAxis)
-						{
-							Log.d("","The 2nd finger is on the right side.");
-						}
-						else if (event.getX() > YAxis)
-						{
-							Log.d("","The 2nd finger is on the left side.");
-						}
-						break;
-
-					case MotionEvent.ACTION_MOVE:
-						mVelocityTracker.addMovement(event);
-						// When you want to determine the velocity, call
-						// computeCurrentVelocity(). Then call getXVelocity()
-						// and getYVelocity() to retrieve the velocity for each pointer ID.
-						mVelocityTracker.computeCurrentVelocity(1000);
-						// Log velocity of pixels per second
-						// Best practice to use VelocityTrackerCompat where possible.
-
-						for(int i = 0; i < allPointers; i++) {
-							if (pointerId == 1) {
-								Log.d("", "Pointer " + pointerId + " X velocity: " +
-										VelocityTrackerCompat.getXVelocity(mVelocityTracker,
-												pointerId));
-								Log.d("", "Pointer "+ pointerId +" Y velocity: " +
-										VelocityTrackerCompat.getYVelocity(mVelocityTracker,
-												pointerId));
-							}
-						}
-						break;
-
-					case MotionEvent.ACTION_UP:
-						mVelocityTracker.clear();
-						break;
-
-					case MotionEvent.ACTION_POINTER_UP:
-						mVelocityTracker.clear();
-						break;
-
-					case MotionEvent.ACTION_CANCEL:
-						// Return a VelocityTracker object back to be re-used by others.
-						mVelocityTracker.recycle();
-						break;
-
-					default:
-						//not working
-						onDoubleTap(event);
-						break;
+		float XAxis = (mHeight/2);
 
 
+		//still working out how to get the Action_Up and Action_Pointer_Up to help in recoginizing the pointer locations
+		switch (action  & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				if (mVelocityTracker == null) {
+					// Retrieve a new VelocityTracker object to watch the velocity of a motion.
+					mVelocityTracker = VelocityTracker.obtain();
+				} else {
+					// Reset the velocity tracker back to its initial state.
+					mVelocityTracker.clear();
 				}
-				return true;
-			}
+				// Add a user's movement to the tracker.
+				mVelocityTracker.addMovement(event);
+				//boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",-1);
+				Log.d("", "Action Down Exists at x= " + event.getX() + " and y= " + event.getY());
+				break;
 
-			else {
-				switch (action  & MotionEvent.ACTION_MASK) {
-					case MotionEvent.ACTION_DOWN:
-						if (mVelocityTracker == null) {
-							// Retrieve a new VelocityTracker object to watch the velocity of a motion.
-							mVelocityTracker = VelocityTracker.obtain();
-						} else {
-							// Reset the velocity tracker back to its initial state.
-							mVelocityTracker.clear();
-						}
-						// Add a user's movement to the tracker.
-						mVelocityTracker.addMovement(event);
-						boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",2);
-						Log.d("", "Right Action Down Exists at x= " + event.getX() + " and y= " + event.getY());
-						break;
-
-					case MotionEvent.ACTION_POINTER_DOWN:
-						mVelocityTracker.addMovement(event);
-						Log.d("", "There are " + allPointers + " fingers down.");
-						Log.d("", "Action_Pointer_Down Exists at x= " + event.getX() + "and y= " + event.getY());
-						if (event.getX() < YAxis)
-						{
-							Log.d("","The 2nd finger is on the right side.");
-						}
-						else if (event.getX() > YAxis)
-						{
-							Log.d("","The 2nd finger is on the left side.");
-						}
-						break;
-
-					case MotionEvent.ACTION_MOVE:
-						mVelocityTracker.addMovement(event);
-						// When you want to determine the velocity, call
-						// computeCurrentVelocity(). Then call getXVelocity()
-						// and getYVelocity() to retrieve the velocity for each pointer ID.
-						mVelocityTracker.computeCurrentVelocity(1000);
-						// Log velocity of pixels per second
-						// Best practice to use VelocityTrackerCompat where possible.
-
-								Log.d("", "Pointer "+pointerId+"X velocity: " +
-										VelocityTrackerCompat.getXVelocity(mVelocityTracker,
-												pointerId));
-								Log.d("", "Pointer " + pointerId + "Y velocity: " +
-										VelocityTrackerCompat.getYVelocity(mVelocityTracker,
-												pointerId));
-						break;
-
-					case MotionEvent.ACTION_UP:
-						mVelocityTracker.clear();
-						break;
-
-					case MotionEvent.ACTION_POINTER_UP:
-						mVelocityTracker.clear();
-						break;
-
-					case MotionEvent.ACTION_CANCEL:
-						// Return a VelocityTracker object back to be re-used by others.
-						mVelocityTracker.recycle();
-						break;
-
-					default:
-						//not working
-						onDoubleTap(event);
-						break;
-
-
+			case MotionEvent.ACTION_POINTER_DOWN:
+				mVelocityTracker.addMovement(event);
+				Log.d("", "There are " + allPointers + " fingers down.");
+				Log.d("", "Action_Pointer_Down Exists at x= " + event.getX() + "and y= " + event.getY());
+				if (event.getX() < YAxis)
+				{
+					Log.d("","The 2nd finger is on the right side.");
 				}
-				return true;
-			}
+				else if (event.getX() > YAxis)
+				{
+					Log.d("","The 2nd finger is on the left side.");
+				}
+				break;
+
+			case MotionEvent.ACTION_MOVE:
+				mVelocityTracker.addMovement(event);
+				// When you want to determine the velocity, call
+				// computeCurrentVelocity(). Then call getXVelocity()
+				// and getYVelocity() to retrieve the velocity for each pointer ID.
+				mVelocityTracker.computeCurrentVelocity(1000);
+				// Log velocity of pixels per second
+				// Best practice to use VelocityTrackerCompat where possible.
+
+				for(int i = 0; i < allPointers; i++) {
+					if (pointerId == 1) {
+						Log.d("", "Pointer " + pointerId + " X velocity: " +
+								VelocityTrackerCompat.getXVelocity(mVelocityTracker,
+										pointerId));
+						Log.d("", "Pointer "+ pointerId +" Y velocity: " +
+								VelocityTrackerCompat.getYVelocity(mVelocityTracker,
+										pointerId));
+					}
+				}
+				break;
+
+			case MotionEvent.ACTION_UP:
+				pointerId--;
+				mVelocityTracker.clear();
+				break;
+
+			case MotionEvent.ACTION_POINTER_UP:
+				pointerId--;
+				mVelocityTracker.clear();
+				break;
+
+			case MotionEvent.ACTION_CANCEL:
+				// Return a VelocityTracker object back to be re-used by others.
+				mVelocityTracker.recycle();
+				break;
 		}
-
-		public boolean gestureAction (MotionEvent startOfEvent, MotionEvent endOfEvent, float x1, float y1, float x2, float y2){
-		// where I want to put the table of gestures to act upon
-
-		float pointerId;
-		int relatedMotion;
-
-
-
-		//gestureFunction.put();
-
-
-			return true;
-		}
-
+		return true;
+	}
 
 	@Override
 		public boolean onDown(MotionEvent event) {
@@ -332,17 +240,19 @@ public class brailleKeyboard extends InputMethodService implements
 
 		@Override
 		public void onLongPress(MotionEvent event) {
+			Log.d(DEBUG_TAG,"onLongPress occurred.");
 	}
 
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 		float distanceY) {
+			Log.d(DEBUG_TAG, "onScroll occurred.");
 		return true;
 	}
 
 		@Override
 		public void onShowPress(MotionEvent event) {
-		Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+		Log.d(DEBUG_TAG, "onShowPress occurred.");
 	}
 
 		@Override
@@ -352,35 +262,13 @@ public class brailleKeyboard extends InputMethodService implements
 
 		@Override
 		public boolean onDoubleTap(MotionEvent event) {
-				Log.d(DEBUG_TAG,"onDoubleTap: " + event.toString());
+				Log.d(DEBUG_TAG,"onDoubleTap pressed.");
 		return true;
 	}
 
 		@Override
 		public boolean onDoubleTapEvent(MotionEvent event) {
-
-			float locationOfX = event.getRawX();
-			float YAxis = (mWidth/2);
-
-			if (YAxis > locationOfX)
-			{
-				//double tap on the left causes cursor to move left
-
-				//having difficulty identifying the proper method here using KEYCODE_SOFT_LEFT
-
-				//textView.setImeOptions(EditorInfo.IME_ACTION_DONE);
-				Log.d(DEBUG_TAG, "Left onDoubleTapEvent: " + event.toString());
-			}
-			else
-			{
-
-				//double tap on the right causes cursor to move right
-
-				//having difficulty identifying the proper method here using KEYCODE_SOFT_RIGHT
-				//CharSequence textBeforeCursor = getCurrentInputConnection().getTextBeforeCursor(-1,0);
-				Log.d(DEBUG_TAG,"Right onDoubleTapEvent: " + event.toString());
-			}
-
+				Log.d(DEBUG_TAG,"onDoubleTapEvent occurred.");
 		return true;
 	}
 
@@ -457,20 +345,26 @@ public class brailleKeyboard extends InputMethodService implements
 
 				//need to adjust the logic here to acknowledge multitouch events here
 				//I want to find a way to loop for all pointers here, but I cannot
-				if (locationOfX < YAxis)
+				if (locationOfX < YAxis) {
+					if (allPointers < 1)
+					{
+						onTouchEvent(motionEvent);
+					}
+					else
+					{
+						mDetector.onTouchEvent(motionEvent);
+					}
+				}
+
+				else
 				{
 					if (allPointers < 1) {
 						onTouchEvent(motionEvent);
 					}
 					else
 					{
-						onDoubleTapEvent(motionEvent);
+						mDetector.onTouchEvent(motionEvent);
 					}
-				}
-
-				else
-				{
-					onTouchEvent(motionEvent);
 				}
 
 					return true;
