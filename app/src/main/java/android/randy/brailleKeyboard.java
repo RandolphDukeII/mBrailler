@@ -209,12 +209,10 @@ public class brailleKeyboard extends InputMethodService implements
 				break;
 
 			case MotionEvent.ACTION_UP:
-				pointerId--;
 				mVelocityTracker.clear();
 				break;
 
 			case MotionEvent.ACTION_POINTER_UP:
-				pointerId--;
 				mVelocityTracker.clear();
 				break;
 
@@ -228,6 +226,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 	@Override
 		public boolean onDown(MotionEvent event) {
+		Log.d(DEBUG_TAG,"onDown occurred.");
 		return true;
 	}
 
@@ -326,7 +325,7 @@ public class brailleKeyboard extends InputMethodService implements
      */
 
     @Override
-    public void onStartInputView(EditorInfo info, boolean restarting)
+    public void onStartInputView(final EditorInfo info, boolean restarting)
     //sets the width and height of the device
     {
         super.onStartInputView(info, restarting);
@@ -339,20 +338,34 @@ public class brailleKeyboard extends InputMethodService implements
 
 				//splits the screen by the y-axis
 				float locationOfX = motionEvent.getX();
-				float YAxis = (mWidth / 2);
-				int allPointers = motionEvent.getPointerCount();
+				float locationOfY= motionEvent.getY();
 
+
+				float YAxis = (mWidth / 2);
+				float XAxis = (mHeight / 2);
+
+				int index = motionEvent.getActionIndex();
+				int allPointers = motionEvent.getPointerCount();
+				int currentPointer = motionEvent.getPointerId(index);
 
 				//need to adjust the logic here to acknowledge multitouch events here
 				//I want to find a way to loop for all pointers here, but I cannot
 				if (locationOfX < YAxis) {
 					if (allPointers < 1)
 					{
+						float firstX=locationOfX;
+						float firstY=locationOfY;
 						onTouchEvent(motionEvent);
 					}
 					else
 					{
+						for (int i = 0; i < allPointers; i++){
+						//need to look at second pointer since my logs are still only of the action_down pointer
+						motionEvent.getY();
+						motionEvent.getX();
 						mDetector.onTouchEvent(motionEvent);
+						Log.d("","This is the "+currentPointer+" pointer at: x= "+locationOfX+", y= "+locationOfY);
+						}
 					}
 				}
 
