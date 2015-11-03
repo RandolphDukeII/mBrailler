@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
-import android.text.Spannable;
 import android.view.GestureDetector;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.VelocityTrackerCompat;
@@ -455,9 +454,25 @@ public class brailleKeyboard extends InputMethodService implements
 				float YAxis = (mWidth / 2);
 				int allPointers = motionEvent.getPointerCount();
 
+
 				//need to adjust the logic here to acknowledge multitouch events here
 				//I want to find a way to loop for all pointers here, but I cannot
+				if (locationOfX < YAxis)
+				{
+					if (allPointers < 1) {
+						onTouchEvent(motionEvent);
+					}
+					else
+					{
+						onDoubleTapEvent(motionEvent);
+					}
+				}
+
+				else
+				{
 					onTouchEvent(motionEvent);
+				}
+
 					return true;
 
 			}
@@ -513,7 +528,7 @@ public class brailleKeyboard extends InputMethodService implements
 		}
     }
 
-	public void touchAction ()
+	public void touchAction (MotionEvent event)
 	{
 
 	}
