@@ -196,6 +196,9 @@ public class brailleKeyboard extends InputMethodService implements
 				// Log velocity of pixels per second
 				// Best practice to use VelocityTrackerCompat where possible.
 
+				break;
+
+			case MotionEvent.ACTION_UP:
 				for(int i = 0; i < allPointers; i++) {
 					if (pointerId == 1) {
 						Log.d("", "Pointer " + pointerId + " X velocity: " +
@@ -206,14 +209,117 @@ public class brailleKeyboard extends InputMethodService implements
 										pointerId));
 					}
 				}
-				break;
-
-			case MotionEvent.ACTION_UP:
 				mVelocityTracker.clear();
 				break;
 
 			case MotionEvent.ACTION_POINTER_UP:
+				for(int i = 0; i < allPointers; i++) {
+					if (pointerId == 1) {
+						Log.d("", "Pointer " + pointerId + " X velocity: " +
+								VelocityTrackerCompat.getXVelocity(mVelocityTracker,
+										pointerId));
+						Log.d("", "Pointer "+ pointerId +" Y velocity: " +
+								VelocityTrackerCompat.getYVelocity(mVelocityTracker,
+										pointerId));
+					}
+				}
 				mVelocityTracker.clear();
+				break;
+
+			case MotionEvent.ACTION_CANCEL:
+				// Return a VelocityTracker object back to be re-used by others.
+				mVelocityTracker.recycle();
+				break;
+		}
+		return true;
+	}
+
+	public boolean onRightEvent(MotionEvent event) {
+
+		//where I will be implementing the switches based on fingers down
+
+		int index = event.getActionIndex();
+		int action = event.getActionMasked();
+		int pointerId = event.getPointerId(index);
+		int allPointers = event.getPointerCount();
+
+		//put the getX and getY local variables
+		float locationOfX = event.getX();
+		float locationOfY = event.getY();
+
+		float YAxis = (mWidth/2);
+
+		float XAxis = (mHeight/2);
+
+
+		//still working out how to get the Action_Up and Action_Pointer_Up to help in recoginizing the pointer locations
+		switch (action  & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				Log.d("", "This is an onRightEvent Action_Down.");
+
+			case MotionEvent.ACTION_POINTER_DOWN:
+				Log.d("", "This is an onRightEvent Action_Pointer_Down.");
+				break;
+
+			case MotionEvent.ACTION_MOVE:
+				Log.d("", "This is an onRightEvent Action_Move.");
+
+				break;
+
+			case MotionEvent.ACTION_UP:
+				Log.d("", "This is an onRightEvent Action_Up.");
+				break;
+
+			case MotionEvent.ACTION_POINTER_UP:
+				Log.d("", "This is an onRightEvent Action_Pointer_Up.");
+				break;
+
+			case MotionEvent.ACTION_CANCEL:
+				// Return a VelocityTracker object back to be re-used by others.
+				mVelocityTracker.recycle();
+				break;
+		}
+		return true;
+	}
+
+	public boolean onLeftEvent(MotionEvent event) {
+
+		//where I will be implementing the switches based on fingers down
+
+		int index = event.getActionIndex();
+		int action = event.getActionMasked();
+		int pointerId = event.getPointerId(index);
+		int allPointers = event.getPointerCount();
+
+		//put the getX and getY local variables
+		float locationOfX = event.getX();
+		float locationOfY = event.getY();
+
+		float YAxis = (mWidth/2);
+
+		float XAxis = (mHeight/2);
+
+
+		//still working out how to get the Action_Up and Action_Pointer_Up to help in recoginizing the pointer locations
+		switch (action  & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				Log.d("", "This is an onLeftEvent Action_Down.");
+
+			case MotionEvent.ACTION_POINTER_DOWN:
+				Log.d("", "This is an onLeftEvent Action_Pointer_Down.");
+				break;
+
+			case MotionEvent.ACTION_MOVE:
+				Log.d("", "This is an onLeftEvent Action_Move.");
+
+				break;
+
+			case MotionEvent.ACTION_UP:
+				Log.d("", "This is an onLeftEvent Action_Up.");
+				break;
+
+			case MotionEvent.ACTION_POINTER_UP:
+				Log.d("", "This is an onLeftEvent Action_Pointer_Up.");
 				break;
 
 			case MotionEvent.ACTION_CANCEL:
@@ -239,15 +345,27 @@ public class brailleKeyboard extends InputMethodService implements
 
 		@Override
 		public void onLongPress(MotionEvent event) {
+
 			Log.d(DEBUG_TAG,"onLongPress occurred.");
 	}
 
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 		float distanceY) {
-			Log.d(DEBUG_TAG, "onScroll occurred.");
-		return true;
-	}
+			int index = e1.getActionIndex();
+			int allPointers = e1.getPointerCount();
+			int currentPointer = e1.getPointerId(index);
+
+			//scrolling only recorded by the ACTION_POINTER movements
+			if (allPointers < 1) {
+				return false;
+			}
+
+			else {
+					Log.d(DEBUG_TAG, "Scroll away.");
+					return true;
+				}
+		}
 
 		@Override
 		public void onShowPress(MotionEvent event) {
@@ -350,12 +468,13 @@ public class brailleKeyboard extends InputMethodService implements
 
 				//need to adjust the logic here to acknowledge multitouch events here
 				//I want to find a way to loop for all pointers here, but I cannot
+
+				//left thumb first
 				if (locationOfX < YAxis) {
 					if (allPointers < 1)
 					{
-						float firstX=locationOfX;
-						float firstY=locationOfY;
-						onTouchEvent(motionEvent);
+						onLeftEvent(motionEvent);
+						return true;
 					}
 					else
 					{
@@ -363,24 +482,36 @@ public class brailleKeyboard extends InputMethodService implements
 						//need to look at second pointer since my logs are still only of the action_down pointer
 						motionEvent.getY();
 						motionEvent.getX();
-						mDetector.onTouchEvent(motionEvent);
-						Log.d("","This is the "+currentPointer+" pointer at: x= "+locationOfX+", y= "+locationOfY);
+						mDetector.isLongpressEnabled();
+							if (mDetector.isLongpressEnabled()==true){
+								mDetector.onTouchEvent(motionEvent);
+								return true;
+							}
 						}
+						//mDetector.onTouchEvent(motionEvent);
+						Log.d("","This is the "+currentPointer+" pointer at: x= "+locationOfX+", y= "+locationOfY);
 					}
 				}
 
+				//right thumb first
 				else
 				{
 					if (allPointers < 1) {
-						onTouchEvent(motionEvent);
-					}
-					else
-					{
 						mDetector.onTouchEvent(motionEvent);
 					}
+					else
+					{	for (int i = 0; i < allPointers; i++) {
+						//need to look at second pointer since my logs are still only of the action_down pointer
+						motionEvent.getY();
+						motionEvent.getX();
+						mDetector.onTouchEvent(motionEvent);
+						return true;
+						}
+					}
+					Log.d("", "This is the " + currentPointer + " pointer at: x= " + locationOfX + ", y= " + locationOfY);
 				}
-
-					return true;
+				//mDetector.onTouchEvent(motionEvent);
+				return true;
 
 			}
 		});
