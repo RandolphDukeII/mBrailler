@@ -315,13 +315,14 @@ public class brailleKeyboard extends InputMethodService implements
 		float YAxis = (mWidth/2);
 
 		if(locationOfX < YAxis){
-			boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",-1);
+			//boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",-1);
+			getCurrentInputConnection().commitText("", -1);
 			Log.d(DEBUG_TAG,"Left onDown occurred at: "+"x: "+locationOfX+" y: "+locationOfY);
 			mInputView.setContentDescription("backward");
 			onLeftEvent(event);
 		}
 		else {
-			boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",2);
+			getCurrentInputConnection().commitText("", 2);
 			Log.d(DEBUG_TAG, "Right onDown occurred at: "+"x: "+locationOfX+" y: "+locationOfY);
 					mInputView.setContentDescription("forward");
 			onRightEvent(event);
@@ -364,7 +365,7 @@ public class brailleKeyboard extends InputMethodService implements
 		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 		float distanceY) {
 
-			int index = e1.getActionIndex();
+			int index = e2.getActionIndex();
 
 			float locationOfXStart = e1.getX(index);
 			float locationOfYStart = e1.getY(index);
@@ -376,13 +377,13 @@ public class brailleKeyboard extends InputMethodService implements
 			float XAxis = (mHeight/2);
 
 
-			int allPointers = e1.getPointerCount();
+			int allPointers = e2.getPointerCount();
 
 			//resets the scrollable side
-			if (locationOfXStart > YAxis){
+			if (locationOfXFinish> YAxis){
 				isRight=true;
 			}
-			if (locationOfXStart < YAxis){
+			if (locationOfXFinish < YAxis){
 				isLeft=true;
 			}
 
@@ -390,24 +391,19 @@ public class brailleKeyboard extends InputMethodService implements
 			float dY= locationOfYFinish - locationOfYStart;
 
 			//scrolling only recorded by the ACTION_POINTER movements
-				if (allPointers < 1) {
+				if (allPointers < 2) {
 					return false;
 				}
 					//&& locationOfXStart > YAxis && locationOfXFinish > YAxis
 
 				else if (mDetector.isLongpressEnabled() && isRight) {
-					switch (MotionEvent.ACTION_POINTER_DOWN) {
-						case 1:
-							Log.d(DEBUG_TAG, "Scroll away since your right finger is down!");
-						Log.d(DEBUG_TAG, "Start: X Finish= " + locationOfXStart + " Finish: " + locationOfXFinish + " Difference: " + dX);
-						Log.d(DEBUG_TAG, "Start: Y Start= " + locationOfYStart + " Finish: " + locationOfYFinish + " Difference: " + dY);
-						isRight = false;
-						isDone = true;
-							break;
 
-						default:
-							break;
-					}
+							Log.d(DEBUG_TAG, "Pointer Count: "+allPointers);
+							Log.d(DEBUG_TAG, "Scroll away since your right finger is down!");
+							Log.d(DEBUG_TAG, "Start: X Finish= " + locationOfXStart + " Finish: " + locationOfXFinish + " Difference: " + dX);
+							Log.d(DEBUG_TAG, "Start: Y Start= " + locationOfYStart + " Finish: " + locationOfYFinish + " Difference: " + dY);
+							isRight = false;
+							isDone = true;
 				}
 
 				else if (mDetector.isLongpressEnabled() && isLeft) {
@@ -471,15 +467,13 @@ public class brailleKeyboard extends InputMethodService implements
 			float locationOfY = event.getY();
 
 			float YAxis = (mWidth/2);
-			float XAxis = (mHeight/2);
+			float XAxis = (mHeight / 2);
 
-			if(locationOfX < YAxis){
+			if (locationOfX < YAxis){
 				isLeft = true;
 				Log.d(DEBUG_TAG, "Left onSingleTapConfirmed occurred.");
 				mInputView.setContentDescription("Left tap.");
-			}
-
-			else{
+			} else{
 				isRight = true;
 				Log.d(DEBUG_TAG, "Right onSingleTapConfirmed occurred.");
 				mInputView.setContentDescription("Right tap.");
@@ -498,10 +492,11 @@ public class brailleKeyboard extends InputMethodService implements
         updateWindowSize();
 
 
-		mDetector = new GestureDetectorCompat(this,this);
-		// Set the gesture detector as the double tap
-		// listener.
-		mDetector.setOnDoubleTapListener(this);
+		//Believe my touch problems are here
+			mDetector = new GestureDetectorCompat(this, this);
+			// Set the gesture detector as the double tap
+			// listener.
+			mDetector.setOnDoubleTapListener(this);
 
 
         // set fullscreen overlay
@@ -708,7 +703,4 @@ public class brailleKeyboard extends InputMethodService implements
     	
     	
     }
-
-
-
 }
