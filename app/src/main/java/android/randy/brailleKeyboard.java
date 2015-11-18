@@ -30,6 +30,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.speech.tts.TextToSpeechService;
+import android.os.Vibrator;
 
 import at.abraxas.amarino.Amarino;
 import at.abraxas.amarino.AmarinoIntent;
@@ -68,6 +70,9 @@ public class brailleKeyboard extends InputMethodService implements
 	//global action flag
 	boolean isDone=false;
 
+	//Second finger status
+	boolean secondFinger=false;
+
 	//Gesture Testing
 	private static final String DEBUG_TAG = "Gestures";
 	private GestureDetectorCompat mDetector;
@@ -76,8 +81,12 @@ public class brailleKeyboard extends InputMethodService implements
 	private static final String DEBUG = "Velocity";
 	private VelocityTracker mVelocityTracker = null;
 
-	public float[] XValues;
-	public float[] YValues;
+	//Text to Speech
+	public static TextToSpeech SayThis = null;
+	public String say;
+
+	//Vibration Settings
+	private Vibrator shake = null;
 
 	private Map <Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
 	private Map <Integer, String> byteToKeyboardNumber = new HashMap<Integer, String>();
@@ -149,7 +158,7 @@ public class brailleKeyboard extends InputMethodService implements
 		byteToKeyboardNumber.put(50, "8");
 		byteToKeyboardNumber.put(20, "9");
 	}
-
+/*
 	public boolean onTouchEvent(MotionEvent event) {
 
 		//where I will be implementing the switches based on fingers down
@@ -209,7 +218,7 @@ public class brailleKeyboard extends InputMethodService implements
 		}
 		return true;
 	}
-
+*/
 	public boolean onRightEvent(MotionEvent event) {
 
 		//where I will be implementing the switches based on fingers down
@@ -235,6 +244,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 			case MotionEvent.ACTION_POINTER_DOWN:
 				Log.d("", "This is an onRightEvent Action_Pointer_Down.");
+				secondFinger = true;
 				break;
 
 			case MotionEvent.ACTION_MOVE:
@@ -248,6 +258,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 			case MotionEvent.ACTION_POINTER_UP:
 				Log.d("", "This is an onRightEvent Action_Pointer_Up.");
+				secondFinger = false;
 				break;
 
 			case MotionEvent.ACTION_CANCEL:
@@ -283,6 +294,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 			case MotionEvent.ACTION_POINTER_DOWN:
 				Log.d("", "This is an onLeft Action_Pointer_Down.");
+				secondFinger = true;
 				break;
 
 			case MotionEvent.ACTION_MOVE:
@@ -296,6 +308,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 			case MotionEvent.ACTION_POINTER_UP:
 				Log.d("", "This is an onLeftEvent Action_Pointer_Up.");
+				secondFinger = false;
 				break;
 
 			case MotionEvent.ACTION_CANCEL:
@@ -348,8 +361,9 @@ public class brailleKeyboard extends InputMethodService implements
 
 			if(locationOfX < YAxis){
 				isLeft = true;
-				Log.d(DEBUG_TAG,"Left onLongPress occurred.");
+				Log.d(DEBUG_TAG, "Left onLongPress occurred.");
 				mInputView.setContentDescription("Left thumb held.");
+				shake.vibrate(40);
 				isDone = true;
 			}
 
@@ -357,6 +371,9 @@ public class brailleKeyboard extends InputMethodService implements
 				isRight = true;
 				Log.d(DEBUG_TAG,"Right onLongPress occurred.");
 				mInputView.setContentDescription("Right thumb held.");
+				shake.vibrate(40);
+
+				//SayThis.speak("Right side pressed.", TextToSpeech.QUEUE_ADD, null);
 				isDone = true;
 			}
 	}
@@ -397,21 +414,27 @@ public class brailleKeyboard extends InputMethodService implements
 					//&& locationOfXStart > YAxis && locationOfXFinish > YAxis
 
 				else if (mDetector.isLongpressEnabled() && isRight) {
-
-							Log.d(DEBUG_TAG, "Pointer Count: "+allPointers);
+							Log.d(DEBUG_TAG, "Pointer Count: " + allPointers);
 							Log.d(DEBUG_TAG, "Scroll away since your right finger is down!");
-							Log.d(DEBUG_TAG, "Start: X Finish= " + locationOfXStart + " Finish: " + locationOfXFinish + " Difference: " + dX);
-							Log.d(DEBUG_TAG, "Start: Y Start= " + locationOfYStart + " Finish: " + locationOfYFinish + " Difference: " + dY);
+							Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
+							onLeftEvent(e2);
 							isRight = false;
 							isDone = true;
+
+
 				}
 
-				else if (mDetector.isLongpressEnabled() && isLeft) {
-								Log.d(DEBUG_TAG, "Scroll away since your left finger is down!");
-								Log.d(DEBUG_TAG, "Start: X Finish= "+locationOfXStart+" Finish: "+locationOfXFinish+" Difference: "+dX);
-								Log.d(DEBUG_TAG, "Start: Y Start= "+locationOfYStart+" Finish: "+locationOfYFinish+" Difference: "+dY);
-								isRight = false;
-								isDone = true;
+				else if (mDetector.isLongpressEnabled() && isLeft)
+					{
+
+						Log.d(DEBUG_TAG, "Scroll away since your left finger is down!");
+						Log.d(DEBUG_TAG, "Pointer Count: "+allPointers);
+						Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
+						onRightEvent(e2);
+						isRight = false;
+						isDone = true;
+
+
 					}
 			if (isDone) {
 				return true;
@@ -448,14 +471,14 @@ public class brailleKeyboard extends InputMethodService implements
 
 			if(locationOfX < YAxis){
 				isLeft = true;
-				Log.d(DEBUG_TAG,"Left onDoubleTapEvent occurred.");
-				mInputView.setContentDescription("Left double tap.");
+				Log.d(DEBUG_TAG, "Left onDoubleTapEvent occurred.");
+				shake.vibrate(40);
 			}
 
 			else{
 				isRight = true;
-				Log.d(DEBUG_TAG,"Right onDoubleTapEvent occurred.");
-				mInputView.setContentDescription("Right double tap.");
+				Log.d(DEBUG_TAG, "Right onDoubleTapEvent occurred.");
+				shake.vibrate(40);
 			}
 
 		return true;
@@ -469,14 +492,14 @@ public class brailleKeyboard extends InputMethodService implements
 			float YAxis = (mWidth/2);
 			float XAxis = (mHeight / 2);
 
-			if (locationOfX < YAxis){
+			if (locationOfX < YAxis) {
 				isLeft = true;
 				Log.d(DEBUG_TAG, "Left onSingleTapConfirmed occurred.");
-				mInputView.setContentDescription("Left tap.");
+
 			} else{
 				isRight = true;
 				Log.d(DEBUG_TAG, "Right onSingleTapConfirmed occurred.");
-				mInputView.setContentDescription("Right tap.");
+
 			}
 
 		return true;
@@ -619,7 +642,11 @@ public class brailleKeyboard extends InputMethodService implements
     	
     	// connects to BT module
 		Amarino.connect(getApplicationContext(), DEVICE_ADDRESS);
-    } 
+		shake = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+
+
+	}
 
     private class BluetoothReceiver extends BroadcastReceiver
 	{
