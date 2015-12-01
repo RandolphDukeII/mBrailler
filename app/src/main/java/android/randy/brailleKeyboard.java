@@ -5,6 +5,7 @@ import java.util.Map;
 
 import android.annotation.SuppressLint;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
 import android.app.usage.UsageEvents.Event;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -67,6 +68,12 @@ public class brailleKeyboard extends InputMethodService implements
 	//global rightside flag
 	boolean isRight=false;
 
+	//global scroll up flag
+	boolean goingUp=false;
+
+	//global scroll down flag
+	boolean goingDown=false;
+
 	//global action flag
 	boolean isDone=false;
 
@@ -83,7 +90,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 	//Text to Speech
 	public static TextToSpeech SayThis = null;
-	public String say;
+	private boolean SayThisLoaded = false;
 
 	//Vibration Settings
 	private Vibrator shake = null;
@@ -219,6 +226,8 @@ public class brailleKeyboard extends InputMethodService implements
 		return true;
 	}
 */
+
+
 	public boolean onRightEvent(MotionEvent event) {
 
 		//where I will be implementing the switches based on fingers down
@@ -241,6 +250,7 @@ public class brailleKeyboard extends InputMethodService implements
 		switch (action  & MotionEvent.ACTION_MASK) {
 			case MotionEvent.ACTION_DOWN:
 				Log.d("", "This is an onRightEvent Action_Down.");
+				break;
 
 			case MotionEvent.ACTION_POINTER_DOWN:
 				Log.d("", "This is an onRightEvent Action_Pointer_Down.");
@@ -291,6 +301,7 @@ public class brailleKeyboard extends InputMethodService implements
 		switch (action  & MotionEvent.ACTION_MASK) {
 			case MotionEvent.ACTION_DOWN:
 				Log.d("", "This is an onLeftEvent Action_Down.");
+				break;
 
 			case MotionEvent.ACTION_POINTER_DOWN:
 				Log.d("", "This is an onLeft Action_Pointer_Down.");
@@ -363,19 +374,20 @@ public class brailleKeyboard extends InputMethodService implements
 				isLeft = true;
 				Log.d(DEBUG_TAG, "Left onLongPress occurred.");
 				mInputView.setContentDescription("Left thumb held.");
-				shake.vibrate(40);
+
 				isDone = true;
 			}
 
 			else{
 				isRight = true;
-				Log.d(DEBUG_TAG,"Right onLongPress occurred.");
+				Log.d(DEBUG_TAG, "Right onLongPress occurred.");
 				mInputView.setContentDescription("Right thumb held.");
-				shake.vibrate(40);
+
 
 				//SayThis.speak("Right side pressed.", TextToSpeech.QUEUE_ADD, null);
 				isDone = true;
 			}
+			shake.vibrate(40);
 	}
 
 		@Override
@@ -397,15 +409,22 @@ public class brailleKeyboard extends InputMethodService implements
 			int allPointers = e2.getPointerCount();
 
 			//resets the scrollable side
-			if (locationOfXFinish> YAxis){
-				isRight=true;
+			if (locationOfXFinish > YAxis){
+				isRight = true;
 			}
 			if (locationOfXFinish < YAxis){
-				isLeft=true;
+				isLeft = true;
 			}
 
-			float dX= locationOfXFinish - locationOfXStart;
-			float dY= locationOfYFinish - locationOfYStart;
+			if (distanceY < 0)
+			{
+				goingDown = true;
+			}
+
+			if (distanceY > 0)
+			{
+				goingUp = true;
+			}
 
 			//scrolling only recorded by the ACTION_POINTER movements
 				if (allPointers < 2) {
@@ -414,12 +433,26 @@ public class brailleKeyboard extends InputMethodService implements
 					//&& locationOfXStart > YAxis && locationOfXFinish > YAxis
 
 				else if (mDetector.isLongpressEnabled() && isRight) {
+							/*
 							Log.d(DEBUG_TAG, "Pointer Count: " + allPointers);
 							Log.d(DEBUG_TAG, "Scroll away since your right finger is down!");
 							Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
+							*/
 							onLeftEvent(e2);
 							isRight = false;
 							isDone = true;
+
+					if (goingDown){
+
+						Log.d(DEBUG_TAG, "going down");
+						goingDown = false;
+					}
+
+					else if (goingUp){
+
+						Log.d(DEBUG_TAG, "going up");
+						goingUp = false;
+					}
 
 
 				}
@@ -427,19 +460,30 @@ public class brailleKeyboard extends InputMethodService implements
 				else if (mDetector.isLongpressEnabled() && isLeft)
 					{
 
+						/*
 						Log.d(DEBUG_TAG, "Scroll away since your left finger is down!");
 						Log.d(DEBUG_TAG, "Pointer Count: "+allPointers);
 						Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
+						*/
 						onRightEvent(e2);
 						isRight = false;
 						isDone = true;
 
+						if (goingDown){
 
+							Log.d(DEBUG_TAG, "going down");
+							goingDown = false;
+						}
+
+						else if (goingUp){
+
+							Log.d(DEBUG_TAG, "going up");
+							goingUp = false;
+						}
 					}
 			if (isDone) {
 				return true;
 			}
-
 			return false;
 		}
 
@@ -472,15 +516,15 @@ public class brailleKeyboard extends InputMethodService implements
 			if(locationOfX < YAxis){
 				isLeft = true;
 				Log.d(DEBUG_TAG, "Left onDoubleTapEvent occurred.");
-				shake.vibrate(40);
+
 			}
 
 			else{
 				isRight = true;
 				Log.d(DEBUG_TAG, "Right onDoubleTapEvent occurred.");
-				shake.vibrate(40);
-			}
 
+			}
+			shake.vibrate(40);;
 		return true;
 	}
 
