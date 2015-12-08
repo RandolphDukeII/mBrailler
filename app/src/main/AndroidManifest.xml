@@ -24,7 +24,9 @@
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
-            <meta-data android:name="android.view.im" android:resource="@xml/method" />
+
+            <meta-data android:name="android.view.im"
+                android:resource="@xml/method" />
         </service>
 
         <!-- Declares an activity for controlling the IME settings -->

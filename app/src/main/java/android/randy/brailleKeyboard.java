@@ -32,6 +32,8 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.speech.tts.TextToSpeechService;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.os.Vibrator;
 
 import at.abraxas.amarino.Amarino;
@@ -79,6 +81,10 @@ public class brailleKeyboard extends InputMethodService implements
 
 	//Second finger status
 	boolean secondFinger=false;
+
+	//menu option
+	int leftFinger = 0;
+	int rightFinger = 0;
 
 	//Gesture Testing
 	private static final String DEBUG_TAG = "Gestures";
@@ -346,8 +352,9 @@ public class brailleKeyboard extends InputMethodService implements
 			onLeftEvent(event);
 		}
 		else {
-			getCurrentInputConnection().commitText("", 2);
-			Log.d(DEBUG_TAG, "Right onDown occurred at: "+"x: "+locationOfX+" y: "+locationOfY);
+			//getCurrentInputConnection().commitText("", 2);
+			
+			Log.d(DEBUG_TAG, "Right onDown occurred at: " + "x: " + locationOfX + " y: " + locationOfY);
 					mInputView.setContentDescription("forward");
 			onRightEvent(event);
 		}
@@ -358,7 +365,7 @@ public class brailleKeyboard extends InputMethodService implements
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2,
 		float velocityX, float velocityY) {
-		return true;
+			return true;
 	}
 
 		@Override
@@ -395,27 +402,21 @@ public class brailleKeyboard extends InputMethodService implements
 		float distanceY) {
 
 			int index = e2.getActionIndex();
-
-			float locationOfXStart = e1.getX(index);
-			float locationOfYStart = e1.getY(index);
-
 			float locationOfXFinish = e2.getX(index);
-			float locationOfYFinish = e2.getY(index);
+			int allPointers = e2.getPointerCount();
 
 			float YAxis = (mWidth/2);
-			float XAxis = (mHeight/2);
-
-
-			int allPointers = e2.getPointerCount();
 
 			//resets the scrollable side
 			if (locationOfXFinish > YAxis){
 				isRight = true;
 			}
+
 			if (locationOfXFinish < YAxis){
 				isLeft = true;
 			}
 
+			//determines the direction of the scrolling
 			if (distanceY < 0)
 			{
 				goingDown = true;
@@ -439,19 +440,23 @@ public class brailleKeyboard extends InputMethodService implements
 							Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
 							*/
 							onLeftEvent(e2);
-							isRight = false;
-							isDone = true;
+							isRight =! isRight;
+							isDone =! isDone;
 
 					if (goingDown){
-
-						Log.d(DEBUG_TAG, "going down");
-						goingDown = false;
+						isLeft = false;
+						leftFinger = leftFinger-1;
+						textEditingMenu(leftFinger);
+						Log.d(DEBUG_TAG, "Left going down "+leftFinger);
+						goingDown =! goingDown;
 					}
 
 					else if (goingUp){
-
-						Log.d(DEBUG_TAG, "going up");
-						goingUp = false;
+						isLeft = false;
+						leftFinger = leftFinger+1;
+						textEditingMenu(leftFinger);
+						Log.d(DEBUG_TAG, "Left going up "+leftFinger);
+						goingUp =! goingUp;
 					}
 
 
@@ -466,19 +471,23 @@ public class brailleKeyboard extends InputMethodService implements
 						Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
 						*/
 						onRightEvent(e2);
-						isRight = false;
-						isDone = true;
+						isRight =! isRight;
+						isDone =! isDone;
 
 						if (goingDown){
-
-							Log.d(DEBUG_TAG, "going down");
-							goingDown = false;
+							isRight = false;
+							rightFinger = rightFinger-1;
+							granularityMenu(rightFinger);
+							Log.d(DEBUG_TAG, "Right going down "+rightFinger);
+							goingDown =! goingDown;
 						}
 
 						else if (goingUp){
-
-							Log.d(DEBUG_TAG, "going up");
-							goingUp = false;
+							isRight = false;
+							rightFinger = rightFinger+1;
+							granularityMenu(rightFinger);
+							Log.d(DEBUG_TAG, "Right going up "+rightFinger);
+							goingUp =! goingUp;
 						}
 					}
 			if (isDone) {
@@ -494,13 +503,13 @@ public class brailleKeyboard extends InputMethodService implements
 
 		@Override
 		public boolean onSingleTapUp(MotionEvent event) {
-
+			Log.d(DEBUG_TAG, "onSingleTapUp happened.");
 		return true;
 	}
 
 		@Override
 		public boolean onDoubleTap(MotionEvent event) {
-				Log.d(DEBUG_TAG,"onDoubleTap pressed.");
+				Log.d(DEBUG_TAG, "onDoubleTap pressed.");
 		return true;
 	}
 
@@ -514,17 +523,17 @@ public class brailleKeyboard extends InputMethodService implements
 			float XAxis = (mHeight/2);
 
 			if(locationOfX < YAxis){
-				isLeft = true;
+				isLeft =! isLeft;
 				Log.d(DEBUG_TAG, "Left onDoubleTapEvent occurred.");
 
 			}
 
 			else{
-				isRight = true;
+				isRight =! isRight;
 				Log.d(DEBUG_TAG, "Right onDoubleTapEvent occurred.");
 
 			}
-			shake.vibrate(40);;
+			shake.vibrate(40);
 		return true;
 	}
 
@@ -537,11 +546,11 @@ public class brailleKeyboard extends InputMethodService implements
 			float XAxis = (mHeight / 2);
 
 			if (locationOfX < YAxis) {
-				isLeft = true;
+				isLeft =! isLeft;
 				Log.d(DEBUG_TAG, "Left onSingleTapConfirmed occurred.");
 
 			} else{
-				isRight = true;
+				isRight =! isRight;
 				Log.d(DEBUG_TAG, "Right onSingleTapConfirmed occurred.");
 
 			}
@@ -607,65 +616,7 @@ public class brailleKeyboard extends InputMethodService implements
 		mInputView.setOnTouchListener(new OnTouchListener() {
 
 			public boolean onTouch(View view, MotionEvent motionEvent) {
-/*
-				//splits the screen by the y-axis
-				float locationOfX = motionEvent.getX();
-				float locationOfY= motionEvent.getY();
 
-
-				float YAxis = (mWidth / 2);
-				float XAxis = (mHeight / 2);
-
-				int index = motionEvent.getActionIndex();
-				int allPointers = motionEvent.getPointerCount();
-				int currentPointer = motionEvent.getPointerId(index);
-
-				//need to adjust the logic here to acknowledge multitouch events here
-				//I want to find a way to loop for all pointers here, but I cannot
-
-
-				//left thumb first
-				if (locationOfX < YAxis) {
-					if (allPointers < 1)
-					{
-						onLeftEvent(motionEvent);
-						return true;
-					}
-					else
-					{
-						for (int i = 0; i < allPointers; i++){
-						//need to look at second pointer since my logs are still only of the action_down pointer
-						motionEvent.getY();
-						motionEvent.getX();
-						mDetector.isLongpressEnabled();
-							if (mDetector.isLongpressEnabled()==true){
-								mDetector.onTouchEvent(motionEvent);
-								return true;
-							}
-						}
-						//mDetector.onTouchEvent(motionEvent);
-						Log.d("","This is the "+currentPointer+" pointer at: x= "+locationOfX+", y= "+locationOfY);
-					}
-				}
-
-				//right thumb first
-				else
-				{
-					if (allPointers < 1) {
-						mDetector.onTouchEvent(motionEvent);
-					}
-					else
-					{	for (int i = 0; i < allPointers; i++) {
-						//need to look at second pointer since my logs are still only of the action_down pointer
-						motionEvent.getY();
-						motionEvent.getX();
-						mDetector.onTouchEvent(motionEvent);
-						return true;
-						}
-					}
-					Log.d("", "This is the " + currentPointer + " pointer at: x= " + locationOfX + ", y= " + locationOfY);
-				}
-				*/
 				mDetector.onTouchEvent(motionEvent);
 				return mDetector.onTouchEvent(motionEvent);
 
@@ -688,6 +639,10 @@ public class brailleKeyboard extends InputMethodService implements
 		Amarino.connect(getApplicationContext(), DEVICE_ADDRESS);
 		shake = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
+		// possible clipboard manager needed here
+		// copy = (EditText) getSystemService(Context.CLIPBOARD_SERVICE);
+
+		//TTS initializer here
 
 
 	}
@@ -707,7 +662,6 @@ public class brailleKeyboard extends InputMethodService implements
 
             else if(action.equalsIgnoreCase(AmarinoIntent.ACTION_RECEIVED))
 			{
-				//need to adjust to byte data so that I can map byte data to characters
 				final int dataType = intent.getIntExtra(AmarinoIntent.EXTRA_DATA_TYPE, -1);
 				
 				if(dataType == AmarinoIntent.STRING_EXTRA)
@@ -725,6 +679,107 @@ public class brailleKeyboard extends InputMethodService implements
 			}
 		}
     }
+
+	public int textEditingMenu(int data) {
+
+		//cut, copy, paste, cancel (which will loop through the options until the scrolling finger released)
+
+		int function = data;
+
+
+
+
+		switch (function) {
+			case 10:
+				cutText();
+				break;
+
+
+			case 20:
+				copyText();
+				break;
+
+
+			case 30:
+				pasteText();
+				break;
+
+			default:
+				//cancel and change the loop number back to case 1
+				break;
+		}
+
+		Log.d(DEBUG_TAG, "Text Editing: " + function);
+		return function;
+	}
+
+	public void copyText() {
+		shake.vibrate(40);
+		Log.d(DEBUG_TAG, "Copy Text!!!!!!!!!!!");
+	}
+
+	public void cutText(){
+		shake.vibrate(40);
+		Log.d(DEBUG_TAG, "Cut Text!!!!!!!!!!!!");
+	}
+
+	public void pasteText() {
+		shake.vibrate(40);
+		Log.d(DEBUG_TAG, "Paste Text!!!!!!!!!!");
+	}
+
+	public int granularityMenu(int data){
+
+		//letter, word, sentence select granularity (which will loop through the options until the scrolling finger is released)
+
+		int function=data;
+/*
+			if (data > 30 || data < 10) {
+				//want to reset the function amount for the switch statement scrolling through the text granularity
+				function=0;
+
+				for (int i = 0; i < 10; i++)
+				{
+					function++;
+				}
+		}
+*/
+
+		switch (function){
+			case 10:
+				letterGranularity();
+				break;
+
+			case 20:
+				wordGranularity();
+				break;
+
+			case 30:
+				sentenceGranularity();
+				break;
+
+			default:
+				//cancel and loop back to case 1
+				break;
+		}
+		Log.d(DEBUG_TAG, "Granularity Menu: "+function);
+		return function;
+	}
+
+	public void letterGranularity(){
+		shake.vibrate(40);
+		Log.d(DEBUG_TAG, "By Letter!!!!!!!!!!!");
+	}
+
+	public void wordGranularity(){
+		shake.vibrate(40);
+		Log.d(DEBUG_TAG, "By Word!!!!!!!!!!!!!");
+	}
+
+	public void sentenceGranularity(){
+		shake.vibrate(40);
+		Log.d(DEBUG_TAG, "Paste Text!!!!!!!!!!");
+	}
 
     @SuppressLint("DefaultLocale")
 	public void sendKeyChar(int data)
