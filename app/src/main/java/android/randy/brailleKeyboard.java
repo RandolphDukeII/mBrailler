@@ -103,6 +103,9 @@ public class brailleKeyboard extends InputMethodService implements
 	//Text Clipboard
 	private ClipboardManager clippedText;
 
+	//Edit Text
+	private EditText textContents;
+
 	// tts vars
 	static public TextToSpeech mTTS = null;
 	private boolean mttsloaded = false;
@@ -359,7 +362,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 
 		if(isLeft){
-			getCurrentInputConnection().setComposingText("",-1);
+			getCurrentInputConnection().setComposingText("", -1);
 			Log.d(DEBUG_TAG, "Left onDown < Back Cursor");
 			onLeftEvent(event);
 			return true;
@@ -539,7 +542,7 @@ public class brailleKeyboard extends InputMethodService implements
 				isLeft =! isLeft;
 
 				//the contextual menu action for startSelectingText
-				getCurrentInputConnection().performContextMenuAction(16908328);
+				//getCurrentInputConnection().performContextMenuAction(16908328);
 
 				mTTS.speak("Left onTap", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Left onDoubleTapEvent occurred.");
@@ -551,6 +554,12 @@ public class brailleKeyboard extends InputMethodService implements
 				Log.d(DEBUG_TAG, "Right onDoubleTapEvent occurred.");
 			}
 			shake.vibrate(40);
+			/*
+			//only reads a single fingered event so this will not work
+			int allPointers = event.getPointerCount();
+			if (allPointers==2){
+				Log.d(DEBUG_TAG, "two finger doubletap.");
+			}*/
 		return true;
 	}
 
@@ -684,7 +693,8 @@ public class brailleKeyboard extends InputMethodService implements
     }
 
 
-    @Override
+
+	@Override
 	public void onCreate() {
 		super.onCreate();
 
@@ -698,6 +708,9 @@ public class brailleKeyboard extends InputMethodService implements
 
 		// clipboard manager
 		clippedText = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+
+		// text box contents
+		//textContents = (EditText)getSystemService(Context.INPUT_METHOD_SERVICE);
 
 	}
 
@@ -739,22 +752,24 @@ public class brailleKeyboard extends InputMethodService implements
 		//cut, copy, paste, cancel (which will loop through the options until the scrolling finger released)
 
 		int function = data;
+		int start=0;
+		int finish=0;
 
 		//need to loop when case<10 || case>40
 
 		switch (function) {
 			case 10:
-				cutText();
+				cutText(start,finish);
 				break;
 
 
 			case 20:
-				copyText();
+				copyText(start,finish);
 				break;
 
 
 			case 30:
-				pasteText();
+				pasteText(start,finish);
 				break;
 
 			case 40:
@@ -771,23 +786,22 @@ public class brailleKeyboard extends InputMethodService implements
 		return function;
 	}
 
-	public void copyText() {
+	public void cutText(int start, int finish){
 		shake.vibrate(40);
-		ClipData clip = ClipData.newPlainText("simple text","Hello, World!");
+		mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
+		Log.d(DEBUG_TAG, "Cut Text!!!!!!!!!!!!");
+	}
+
+	public void copyText(int start, int finish) {
+		shake.vibrate(40);
+		ClipData clip = ClipData.newPlainText("simple text", "Hello, World!");
 		clippedText.setPrimaryClip(clip);
 
 		mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 		Log.d(DEBUG_TAG, "Copy Text!!!!!!!!!!!");
 	}
 
-	public void cutText(){
-		shake.vibrate(40);
-
-		mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
-		Log.d(DEBUG_TAG, "Cut Text!!!!!!!!!!!!");
-	}
-
-	public void pasteText() {
+	public void pasteText(int start, int finish) {
 		shake.vibrate(40);
 		// Checks to see if the clip item contains an Intent, by testing to see if getIntent() returns null
 		Intent pasteIntent = clippedText.getPrimaryClip().getItemAt(0).getIntent();
