@@ -1,9 +1,12 @@
 package android.randy;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import android.annotation.SuppressLint;
+import android.database.Cursor;
+import android.net.Uri;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.app.usage.UsageEvents.Event;
@@ -39,13 +42,15 @@ import android.os.Vibrator;
 import at.abraxas.amarino.Amarino;
 import at.abraxas.amarino.AmarinoIntent;
 
+import static android.view.KeyEvent.KEYCODE_6;
+import static android.view.KeyEvent.KEYCODE_BACK;
+import static android.view.KeyEvent.keyCodeToString;
 
 
 @SuppressLint("DefaultLocale")
 public class brailleKeyboard extends InputMethodService implements
 		GestureDetector.OnGestureListener,
-		GestureDetector.OnDoubleTapListener
-{
+		GestureDetector.OnDoubleTapListener, OnInitListener {
 	
 	// inputView of the keyboard
 	public View mInputView;
@@ -90,16 +95,17 @@ public class brailleKeyboard extends InputMethodService implements
 	private static final String DEBUG_TAG = "Gestures";
 	private GestureDetectorCompat mDetector;
 
-	//Finger position testing
-	private static final String DEBUG = "Velocity";
 	private VelocityTracker mVelocityTracker = null;
-
-	//Text to Speech
-	public static TextToSpeech SayThis = null;
-	private boolean SayThisLoaded = false;
 
 	//Vibration Settings
 	private Vibrator shake = null;
+
+	//Text Clipboard
+	private ClipboardManager clippedText;
+
+	// tts vars
+	static public TextToSpeech mTTS = null;
+	private boolean mttsloaded = false;
 
 	private Map <Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
 	private Map <Integer, String> byteToKeyboardNumber = new HashMap<Integer, String>();
@@ -340,23 +346,29 @@ public class brailleKeyboard extends InputMethodService implements
 		public boolean onDown(MotionEvent event) {
 		//put the getX and getY local variables
 		float locationOfX = event.getX();
-		float locationOfY = event.getY();
 
 		float YAxis = (mWidth/2);
 
-		if(locationOfX < YAxis){
-			//boolean textBeforeCursor = getCurrentInputConnection().setComposingText("",-1);
-			getCurrentInputConnection().commitText("", -1);
-			Log.d(DEBUG_TAG,"Left onDown occurred at: "+"x: "+locationOfX+" y: "+locationOfY);
-			mInputView.setContentDescription("backward");
-			onLeftEvent(event);
+		if (locationOfX > YAxis){
+			isRight = true;
 		}
-		else {
-			//getCurrentInputConnection().commitText("", 2);
-			
-			Log.d(DEBUG_TAG, "Right onDown occurred at: " + "x: " + locationOfX + " y: " + locationOfY);
-					mInputView.setContentDescription("forward");
+
+		if (locationOfX < YAxis){
+			isLeft = true;
+		}
+
+
+		if(isLeft){
+			getCurrentInputConnection().setComposingText("",-1);
+			Log.d(DEBUG_TAG, "Left onDown < Back Cursor");
+			onLeftEvent(event);
+			return true;
+		}
+		else if(isRight){
+			getCurrentInputConnection().commitText("", 2);
+			Log.d(DEBUG_TAG, "Right onDown > Forward Cursor");
 			onRightEvent(event);
+			return true;
 		}
 		return true;
 	}
@@ -381,17 +393,16 @@ public class brailleKeyboard extends InputMethodService implements
 				isLeft = true;
 				Log.d(DEBUG_TAG, "Left onLongPress occurred.");
 				mInputView.setContentDescription("Left thumb held.");
+				mTTS.speak("Scroll with your right thumb for granularity.", TextToSpeech.QUEUE_ADD, null);
+
 
 				isDone = true;
-			}
-
-			else{
+			} else {
 				isRight = true;
 				Log.d(DEBUG_TAG, "Right onLongPress occurred.");
 				mInputView.setContentDescription("Right thumb held.");
 
-
-				//SayThis.speak("Right side pressed.", TextToSpeech.QUEUE_ADD, null);
+				mTTS.speak("Scroll with your left thumb for editing.", TextToSpeech.QUEUE_ADD, null);
 				isDone = true;
 			}
 			shake.vibrate(40);
@@ -428,11 +439,14 @@ public class brailleKeyboard extends InputMethodService implements
 			}
 
 			//scrolling only recorded by the ACTION_POINTER movements
+			//should include activating the Granularity and Editing when the scrolling finger is completed
+
 				if (allPointers < 2) {
 					return false;
 				}
 					//&& locationOfXStart > YAxis && locationOfXFinish > YAxis
 
+				//Right finger held, left finger swipe
 				else if (mDetector.isLongpressEnabled() && isRight) {
 							/*
 							Log.d(DEBUG_TAG, "Pointer Count: " + allPointers);
@@ -441,12 +455,11 @@ public class brailleKeyboard extends InputMethodService implements
 							*/
 							onLeftEvent(e2);
 							isRight =! isRight;
-							isDone =! isDone;
+
 
 					if (goingDown){
 						isLeft = false;
 						leftFinger = leftFinger-1;
-						textEditingMenu(leftFinger);
 						Log.d(DEBUG_TAG, "Left going down "+leftFinger);
 						goingDown =! goingDown;
 					}
@@ -454,14 +467,15 @@ public class brailleKeyboard extends InputMethodService implements
 					else if (goingUp){
 						isLeft = false;
 						leftFinger = leftFinger+1;
-						textEditingMenu(leftFinger);
 						Log.d(DEBUG_TAG, "Left going up "+leftFinger);
 						goingUp =! goingUp;
 					}
-
+					textEditingMenu(leftFinger);
 
 				}
 
+
+				//Left finger held, right finger swipe
 				else if (mDetector.isLongpressEnabled() && isLeft)
 					{
 
@@ -477,18 +491,17 @@ public class brailleKeyboard extends InputMethodService implements
 						if (goingDown){
 							isRight = false;
 							rightFinger = rightFinger-1;
-							granularityMenu(rightFinger);
-							Log.d(DEBUG_TAG, "Right going down "+rightFinger);
+							Log.d(DEBUG_TAG, "Right going down " + rightFinger);
 							goingDown =! goingDown;
 						}
 
 						else if (goingUp){
 							isRight = false;
 							rightFinger = rightFinger+1;
-							granularityMenu(rightFinger);
 							Log.d(DEBUG_TAG, "Right going up "+rightFinger);
 							goingUp =! goingUp;
 						}
+						granularityMenu(rightFinger);
 					}
 			if (isDone) {
 				return true;
@@ -524,6 +537,11 @@ public class brailleKeyboard extends InputMethodService implements
 
 			if(locationOfX < YAxis){
 				isLeft =! isLeft;
+
+				//the contextual menu action for startSelectingText
+				getCurrentInputConnection().performContextMenuAction(16908328);
+
+				mTTS.speak("Left onTap", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Left onDoubleTapEvent occurred.");
 
 			}
@@ -531,11 +549,11 @@ public class brailleKeyboard extends InputMethodService implements
 			else{
 				isRight =! isRight;
 				Log.d(DEBUG_TAG, "Right onDoubleTapEvent occurred.");
-
 			}
 			shake.vibrate(40);
 		return true;
 	}
+
 
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent event) {//put the getX and getY local variables
@@ -558,11 +576,53 @@ public class brailleKeyboard extends InputMethodService implements
 		return true;
 	}
 
+	/*********
+	 * TEXT TO SPEECH
+	 *********/
 
+	/**
+	 * OnInitLister implementation for TTS
+	 */
+
+	public void onInit(int status) {
+		if(mttsloaded || mTTS == null) return;
+		mttsloaded = true;
+
+		if(status == TextToSpeech.SUCCESS)
+		{
+			mTTS.setLanguage(Locale.getDefault());
+		}
+		else //ERROR
+		{
+			//mTTs.playEarcon("error", TextToSpeech.QUEUE_FLUSH, null);
+			//Toast.makeText(this, "Error: TTS not avaliable. Check your device settings.", Toast.LENGTH_LONG).show();
+		}
+	}
+
+	private void ttsSpeak(String message, int queuemode)
+	{
+		if(mTTS != null)
+		{
+			mTTS.speak(message, queuemode, null);
+		}
+	}
+
+	private void ttsStop()
+	{
+		if(mTTS != null && mTTS.isSpeaking())
+		{
+			mTTS.stop();
+		}
+	}
 	
 	@Override
 	public View onCreateInputView()
     {
+		if(!mttsloaded)
+		{
+			mTTS = new TextToSpeech(this, this); //wait for TTS init
+		}
+
         // inflate the Overlay and sets the touch listener
         mInputView = (View) getLayoutInflater().inflate(R.layout.keyboardui, null);
         updateWindowSize();
@@ -616,10 +676,8 @@ public class brailleKeyboard extends InputMethodService implements
 		mInputView.setOnTouchListener(new OnTouchListener() {
 
 			public boolean onTouch(View view, MotionEvent motionEvent) {
-
 				mDetector.onTouchEvent(motionEvent);
 				return mDetector.onTouchEvent(motionEvent);
-
 			}
 		});
 
@@ -627,9 +685,8 @@ public class brailleKeyboard extends InputMethodService implements
 
 
     @Override
-	public void onCreate()
-    {
-    	super.onCreate();
+	public void onCreate() {
+		super.onCreate();
 
 		// register broadcast receiver
 		registerReceiver(mBTReceiver, new IntentFilter(AmarinoIntent.ACTION_RECEIVED));
@@ -639,11 +696,8 @@ public class brailleKeyboard extends InputMethodService implements
 		Amarino.connect(getApplicationContext(), DEVICE_ADDRESS);
 		shake = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-		// possible clipboard manager needed here
-		// copy = (EditText) getSystemService(Context.CLIPBOARD_SERVICE);
-
-		//TTS initializer here
-
+		// clipboard manager
+		clippedText = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
 
 	}
 
@@ -686,8 +740,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 		int function = data;
 
-
-
+		//need to loop when case<10 || case>40
 
 		switch (function) {
 			case 10:
@@ -704,10 +757,15 @@ public class brailleKeyboard extends InputMethodService implements
 				pasteText();
 				break;
 
+			case 40:
+				//cancel
+				break;
+
 			default:
 				//cancel and change the loop number back to case 1
 				break;
-		}
+			}
+
 
 		Log.d(DEBUG_TAG, "Text Editing: " + function);
 		return function;
@@ -715,17 +773,39 @@ public class brailleKeyboard extends InputMethodService implements
 
 	public void copyText() {
 		shake.vibrate(40);
+		ClipData clip = ClipData.newPlainText("simple text","Hello, World!");
+		clippedText.setPrimaryClip(clip);
+
+		mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 		Log.d(DEBUG_TAG, "Copy Text!!!!!!!!!!!");
 	}
 
 	public void cutText(){
 		shake.vibrate(40);
+
+		mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 		Log.d(DEBUG_TAG, "Cut Text!!!!!!!!!!!!");
 	}
 
 	public void pasteText() {
 		shake.vibrate(40);
-		Log.d(DEBUG_TAG, "Paste Text!!!!!!!!!!");
+		// Checks to see if the clip item contains an Intent, by testing to see if getIntent() returns null
+		Intent pasteIntent = clippedText.getPrimaryClip().getItemAt(0).getIntent();
+
+		if (pasteIntent != null) {
+
+
+			mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
+				// handle the Intent
+			Log.d(DEBUG_TAG, "Pasted");
+
+		} else {
+
+			mTTS.speak("Nothing to paste", TextToSpeech.QUEUE_ADD, null);
+			// ignore the clipboard, or issue an error if your application was expecting an Intent to be
+			// on the clipboard
+			Log.d(DEBUG_TAG, "not pasted");
+		}
 	}
 
 	public int granularityMenu(int data){
@@ -758,8 +838,16 @@ public class brailleKeyboard extends InputMethodService implements
 				sentenceGranularity();
 				break;
 
+			case 40:
+				//cancel
+				break;
+
 			default:
-				//cancel and loop back to case 1
+				//need a for loop to increase the function count beyond the lower and higher data limits/scrolls
+				if(data<0)
+				{function=0;}
+				else if(data>40)
+				{function=0;}
 				break;
 		}
 		Log.d(DEBUG_TAG, "Granularity Menu: "+function);
@@ -768,17 +856,20 @@ public class brailleKeyboard extends InputMethodService implements
 
 	public void letterGranularity(){
 		shake.vibrate(40);
+		mTTS.speak("By Letter", TextToSpeech.QUEUE_ADD, null);
 		Log.d(DEBUG_TAG, "By Letter!!!!!!!!!!!");
 	}
 
 	public void wordGranularity(){
 		shake.vibrate(40);
+		mTTS.speak("By word", TextToSpeech.QUEUE_ADD, null);
 		Log.d(DEBUG_TAG, "By Word!!!!!!!!!!!!!");
 	}
 
 	public void sentenceGranularity(){
 		shake.vibrate(40);
-		Log.d(DEBUG_TAG, "Paste Text!!!!!!!!!!");
+		mTTS.speak("By sentence", TextToSpeech.QUEUE_ADD, null);
+		Log.d(DEBUG_TAG, "By sentence!!!!!!!!!!");
 	}
 
     @SuppressLint("DefaultLocale")
