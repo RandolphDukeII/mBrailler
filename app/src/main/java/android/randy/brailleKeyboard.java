@@ -57,11 +57,17 @@ public class brailleKeyboard extends InputMethodService implements
 	//global number toggle flag for the number pad
 	boolean isNumberToggle=false;
 
-	//global leftside flag
+	//global left side flag
 	boolean isLeft=false;
 
-	//global rightside flag
+	//global right side flag
 	boolean isRight=false;
+
+	//global single tap flag
+	boolean isSinglePress=false;
+
+	//global double tap flag
+	boolean isDoublePress=false;
 
 	//close keyboard flag
 	boolean closeKeyboard=false;
@@ -235,16 +241,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 		int index = event.getActionIndex();
 		int action = event.getActionMasked();
-		int pointerId = event.getPointerId(index);
-		int allPointers = event.getPointerCount();
 
-		//put the getX and getY local variables
-		float locationOfX = event.getX();
-		float locationOfY = event.getY();
-
-		float YAxis = (mWidth/2);
-
-		float XAxis = (mHeight/2);
 
 
 		//still working out how to get the Action_Up and Action_Pointer_Up to help in recoginizing the pointer locations
@@ -289,24 +286,30 @@ public class brailleKeyboard extends InputMethodService implements
 
 		if (locationOfX > YAxis){
 			isRight = true;
+			isSinglePress = true;
 		}
 
 		if (locationOfX < YAxis){
 			isLeft = true;
+			isSinglePress = true;
 		}
-
+/*
 		if(isLeft){
-			getCurrentInputConnection().setComposingText("", -1);
+			//getCurrentInputConnection().setComposingText("", -1);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT);
 			Log.d(DEBUG_TAG, "Left onDown < Back Cursor");
-			onLeftEvent(event);
-			return true;
+			isLeft=false;
+			//onLeftEvent(event);
+			//return true;
 		}
 		else if(isRight){
-			getCurrentInputConnection().commitText("", 2);
+			//getCurrentInputConnection().commitText("", 2);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_RIGHT);
 			Log.d(DEBUG_TAG, "Right onDown > Forward Cursor");
-			onRightEvent(event);
-			return true;
-		}
+			isRight=false;
+			//onRightEvent(event);
+			//return true;
+		}*/
 		return true;
 	}
 
@@ -450,23 +453,63 @@ public class brailleKeyboard extends InputMethodService implements
 
 	@Override
 	public void onShowPress(MotionEvent event) {
+
 		Log.d(DEBUG_TAG, "onShowPress occurred.");
 	}
 
 	@Override
 	public boolean onSingleTapUp(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onSingleTapUp happened.");
+
+		if(isLeft&&isSinglePress){
+			//getCurrentInputConnection().setComposingText("", -1);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT);
+			Log.d(DEBUG_TAG, "Left onDown < Back Cursor");
+			isLeft=false;
+			isSinglePress=false;
+			//onLeftEvent(event);
+			//return true;
+		}
+		else if(isRight&&isSinglePress){
+			//getCurrentInputConnection().commitText("", 2);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_RIGHT);
+			Log.d(DEBUG_TAG, "Right onDown > Forward Cursor");
+			isRight=false;
+			isSinglePress=false;
+			//onRightEvent(event);
+			//return true;
+		}
 		return true;
 	}
 
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onDoubleTap pressed.");
+
+
+		float locationOfX = event.getX();
+
+		float YAxis = (mWidth/2);
+
+		if (locationOfX > YAxis){
+			isRight = true;
+			isDoublePress=true;
+		}
+
+		if (locationOfX < YAxis){
+			isLeft = true;
+			isDoublePress=true;
+		}
+		shake.vibrate(40);
+		
 		return true;
+
+
 	}
 
 	@Override
 	public boolean onDoubleTapEvent(MotionEvent event) {
+		/*
 		//put the getX and getY local variables
 		float locationOfX = event.getX();
 		float locationOfY = event.getY();
@@ -478,8 +521,7 @@ public class brailleKeyboard extends InputMethodService implements
 			isLeft =! isLeft;
 
 			//the contextual menu action for startSelectingText
-			//getCurrentInputConnection().performContextMenuAction(16908328);
-			//getCurrentInputConnection().setComposingText();
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_B);
 			mTTS.speak("Left onTap", TextToSpeech.QUEUE_ADD, null);
 			Log.d(DEBUG_TAG, "Left onDoubleTapEvent occurred.");
 
@@ -489,7 +531,26 @@ public class brailleKeyboard extends InputMethodService implements
 			isRight =! isRight;
 			Log.d(DEBUG_TAG, "Right onDoubleTapEvent occurred.");
 		}
-		shake.vibrate(40);
+		*/
+		//put the getX and getY local variables
+		if(isLeft&&isDoublePress){
+			//getCurrentInputConnection().setComposingText("", -1);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_C);
+			Log.d(DEBUG_TAG, "Left DoubleTap");
+			isLeft=false;
+			isDoublePress=false;
+			//onLeftEvent(event);
+			//return true;
+		}
+		else if(isRight&&isDoublePress){
+			//getCurrentInputConnection().commitText("", 2);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_D);
+			Log.d(DEBUG_TAG, "Right DoubleTap");
+			isRight=false;
+			isDoublePress=false;
+			//onRightEvent(event);
+			//return true;
+		}
 
 		return true;
 	}
@@ -537,6 +598,7 @@ public class brailleKeyboard extends InputMethodService implements
 			//mTTs.playEarcon("error", TextToSpeech.QUEUE_FLUSH, null);
 			//Toast.makeText(this, "Error: TTS not avaliable. Check your device settings.", Toast.LENGTH_LONG).show();
 		}
+
 	}
 
 	private void ttsSpeak(String message, int queuemode)
@@ -589,6 +651,7 @@ public class brailleKeyboard extends InputMethodService implements
 		Display display = wm.getDefaultDisplay();
 		mWidth=display.getWidth();
 		mHeight=display.getHeight();
+
 	}
 
 
@@ -596,10 +659,10 @@ public class brailleKeyboard extends InputMethodService implements
 	public void onStartInputView(final EditorInfo info, boolean restarting)
 	//sets the width and height of the device
 	{
+
 		super.onStartInputView(info, restarting);
 		// set fullscreen overlay
 		OverlayView.setLayoutParams(new FrameLayout.LayoutParams(mWidth, mHeight));
-		mTTS.speak("mBrailler keyboard ready", TextToSpeech.QUEUE_ADD, null);
 		mInputView.setOnTouchListener(new OnTouchListener() {
 
 			public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -639,6 +702,8 @@ public class brailleKeyboard extends InputMethodService implements
 
 		// text box contents
 		//textContents = (EditText)getSystemService(Context.INPUT_METHOD_SERVICE);
+
+		//mTTS.speak("m Brailler keyboard ready", TextToSpeech.QUEUE_ADD, null);
 
 	}
 
@@ -687,18 +752,22 @@ public class brailleKeyboard extends InputMethodService implements
 		{
 			if (function % 40 == 1) {
 				doAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
 				doAction="Paste";
+				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
 				doAction="Copy";
+				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
 				doAction="Cut";
+				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
 		}
@@ -709,18 +778,22 @@ public class brailleKeyboard extends InputMethodService implements
 
 			if (function % 40 == 1) {
 				doAction="Cancel";
-				Log.d(DEBUG_TAG, "Cancel");
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
+				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
 				doAction="Paste";
+				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
 				doAction="Copy";
+				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
 				doAction="Cut";
+				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
 		}
@@ -731,18 +804,22 @@ public class brailleKeyboard extends InputMethodService implements
 
 			if (function % 40 == 1) {
 				doAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
 				doAction="Paste";
+				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
 				doAction="Copy";
+				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
 				doAction="Cut";
+				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
 		}
@@ -753,18 +830,22 @@ public class brailleKeyboard extends InputMethodService implements
 
 			if (function % 40 == 1) {
 				doAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
 				doAction="Paste";
+				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
 				doAction="Copy";
+				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
 				doAction="Cut";
+				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
 		}
@@ -1020,7 +1101,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 		else if(closeKeyboard)
 		{
-			getCurrentInputConnection().performContextMenuAction(KEYCODE_BACK);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 		}
 	}
 
