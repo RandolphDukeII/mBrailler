@@ -161,7 +161,7 @@ public class brailleKeyboard extends InputMethodService implements
 		//delete button KEYCODE_DELETE
 		byteToKeyboardCharacter.put(128, "Delete");
 
-		//shift button KEYCODE_SHIFT_RIGHT
+		//closes the keyboard
 		byteToKeyboardCharacter.put(63, "Close");
 
 		//shift button KEYCODE_SHIFT_RIGHT
@@ -552,13 +552,7 @@ public class brailleKeyboard extends InputMethodService implements
 		*/
 		//put the getX and getY local variables
 		if(isLeft&&isDoublePress){
-			//getCurrentInputConnection().setComposingText("", -1);
-			//performContextMenuAction(16908328);
-
-			//sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT);
-			//getCurrentInputConnection().getTextBeforeCursor(-1,0);
-			//getCurrentInputConnection().setSelection();
-			//getCurrentInputConnection().performEditorAction(16908328);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_MOVE_HOME);
 			Log.d(DEBUG_TAG, "Left DoubleTap");
 			isLeft=false;
 			isDoublePress=false;
@@ -566,8 +560,7 @@ public class brailleKeyboard extends InputMethodService implements
 			//return true;
 		}
 		else if(isRight&&isDoublePress){
-			//getCurrentInputConnection().commitText("", 2);
-			sendDownUpKeyEvents(KeyEvent.KEYCODE_D);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_MOVE_END);
 			Log.d(DEBUG_TAG, "Right DoubleTap");
 			isRight=false;
 			isDoublePress=false;
@@ -792,18 +785,19 @@ public class brailleKeyboard extends InputMethodService implements
 				if(dataType == AmarinoIntent.STRING_EXTRA)
 				{
 					String data = intent.getStringExtra(AmarinoIntent.EXTRA_DATA);
-
 					if(data != null)
 					{
 						// TODO whatever you want
 						Log.v(TAG, "data received: " + data);
-						sendKeyChar(Integer.valueOf(data));
+						//sendKeyChar(Integer.valueOf(data));
 
 					}
+
 				}
 			}
 		}
 	}
+
 
 	public String textEditingMenu(int data) {
 
