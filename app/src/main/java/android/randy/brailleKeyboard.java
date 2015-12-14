@@ -35,7 +35,7 @@ import at.abraxas.amarino.AmarinoIntent;
 import static android.view.KeyEvent.*;
 
 
-@SuppressLint("DefaultLocale")
+//@SuppressLint("DefaultLocale")
 public class brailleKeyboard extends InputMethodService implements
 		GestureDetector.OnGestureListener,
 		GestureDetector.OnDoubleTapListener, OnInitListener {
@@ -84,30 +84,30 @@ public class brailleKeyboard extends InputMethodService implements
 	//full scrolling action and toggle finger released
 	boolean isDone=false;
 
-	//Second finger status
-	boolean secondFinger=false;
-
 	//menu option
 	int leftFinger = 0;
 	int rightFinger = 0;
+
+	//Scrolling Action to perform
+	String doScrollAction="";
 
 	//Gesture Testing
 	private static final String DEBUG_TAG = "Gestures";
 	private GestureDetectorCompat mDetector;
 
-	private VelocityTracker mVelocityTracker = null;
-
 	//Vibration Settings
-	private Vibrator shake = null;
+	public static Vibrator shake;
+	//=(Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
 	//Text Clipboard
 	private ClipboardManager clippedText;
 
 	//Edit Text
-	private EditText textContents;
+	@SuppressLint("ServiceCast")
+	public EditText textContents;
 
 	// tts vars
-	static public TextToSpeech mTTS = null;
+	static public TextToSpeech mTTS;
 	private boolean mttsloaded = false;
 
 	private Map <Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
@@ -183,7 +183,7 @@ public class brailleKeyboard extends InputMethodService implements
 		byteToKeyboardNumber.put(50, "8");
 		byteToKeyboardNumber.put(20, "9");
 	}
-
+/*
 	public boolean onRightEvent(MotionEvent event) {
 
 		//where I will be implementing the switches based on fingers down
@@ -235,6 +235,7 @@ public class brailleKeyboard extends InputMethodService implements
 		return true;
 	}
 
+
 	public boolean onLeftEvent(MotionEvent event) {
 
 		//where I will be implementing the switches based on fingers down
@@ -276,9 +277,11 @@ public class brailleKeyboard extends InputMethodService implements
 		}
 		return true;
 	}
+	*/
 
 	@Override
 	public boolean onDown(MotionEvent event) {
+		/*
 		//put the getX and getY local variables
 		float locationOfX = event.getX();
 
@@ -293,6 +296,7 @@ public class brailleKeyboard extends InputMethodService implements
 			isLeft = true;
 			isSinglePress = true;
 		}
+		*/
 /*
 		if(isLeft){
 			//getCurrentInputConnection().setComposingText("", -1);
@@ -332,7 +336,8 @@ public class brailleKeyboard extends InputMethodService implements
 		if(locationOfX < YAxis){
 			isLeft = true;
 			Log.d(DEBUG_TAG, "Left onLongPress occurred.");
-			mInputView.setContentDescription("Left thumb held.");
+			//mInputView.setContentDescription("Left thumb held.");
+			shake.vibrate(40);
 			mTTS.speak("Scroll with your right thumb for granularity.", TextToSpeech.QUEUE_ADD, null);
 			//scrollingDone = true;
 		}
@@ -340,12 +345,13 @@ public class brailleKeyboard extends InputMethodService implements
 		else {
 			isRight = true;
 			Log.d(DEBUG_TAG, "Right onLongPress occurred.");
-			mInputView.setContentDescription("Right thumb held.");
+			shake.vibrate(40);
+			//mInputView.setContentDescription("Right thumb held.");
 
 			mTTS.speak("Scroll with your left thumb for editing.", TextToSpeech.QUEUE_ADD, null);
 			//scrollingDone = true;
 		}
-		shake.vibrate(40);
+
 	}
 
 	@Override
@@ -393,7 +399,7 @@ public class brailleKeyboard extends InputMethodService implements
 							Log.d(DEBUG_TAG, "Scroll away since your right finger is down!");
 							Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
 							*/
-			onLeftEvent(e2);
+			//onLeftEvent(e2);
 			isRight =! isRight;
 			scrollingDone = true;
 
@@ -412,7 +418,7 @@ public class brailleKeyboard extends InputMethodService implements
 			}
 
 			if (scrollingDone) {
-				textEditingMenu(leftFinger, "");
+				textEditingMenu(leftFinger);
 			}
 		}
 
@@ -420,13 +426,7 @@ public class brailleKeyboard extends InputMethodService implements
 		//Left finger held, right finger swipe
 		else if (mDetector.isLongpressEnabled() && isLeft)
 		{
-
-						/*
-						Log.d(DEBUG_TAG, "Scroll away since your left finger is down!");
-						Log.d(DEBUG_TAG, "Pointer Count: "+allPointers);
-						Log.d(DEBUG_TAG, "Distance X: "+distanceX+" Distance Y: "+distanceY);
-						*/
-			onRightEvent(e2);
+			//onRightEvent(e2);
 			isRight =! isRight;
 			scrollingDone = true;
 
@@ -445,7 +445,7 @@ public class brailleKeyboard extends InputMethodService implements
 			}
 		}
 		if (scrollingDone) {
-			granularityMenu(rightFinger, isDone);
+			granularityMenu(rightFinger);
 			return true;
 		}
 		return false;
@@ -460,7 +460,7 @@ public class brailleKeyboard extends InputMethodService implements
 	@Override
 	public boolean onSingleTapUp(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onSingleTapUp happened.");
-
+/*
 		if(isLeft&&isSinglePress){
 			//getCurrentInputConnection().setComposingText("", -1);
 			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT);
@@ -479,6 +479,24 @@ public class brailleKeyboard extends InputMethodService implements
 			//onRightEvent(event);
 			//return true;
 		}
+		*/
+		//put the getX and getY local variables
+		float locationOfX = event.getX();
+
+		float YAxis = (mWidth/2);
+
+
+		isSinglePress = true;
+		if (locationOfX > YAxis){
+			isRight = true;
+			//isSinglePress = true;
+		}
+
+		if (locationOfX < YAxis){
+			isLeft = true;
+
+		}
+
 		return true;
 	}
 
@@ -501,7 +519,7 @@ public class brailleKeyboard extends InputMethodService implements
 			isDoublePress=true;
 		}
 		shake.vibrate(40);
-		
+
 		return true;
 
 
@@ -535,7 +553,12 @@ public class brailleKeyboard extends InputMethodService implements
 		//put the getX and getY local variables
 		if(isLeft&&isDoublePress){
 			//getCurrentInputConnection().setComposingText("", -1);
-			sendDownUpKeyEvents(KeyEvent.KEYCODE_C);
+			//performContextMenuAction(16908328);
+
+			//sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT);
+			//getCurrentInputConnection().getTextBeforeCursor(-1,0);
+			//getCurrentInputConnection().setSelection();
+			//getCurrentInputConnection().performEditorAction(16908328);
 			Log.d(DEBUG_TAG, "Left DoubleTap");
 			isLeft=false;
 			isDoublePress=false;
@@ -558,6 +581,7 @@ public class brailleKeyboard extends InputMethodService implements
 
 	@Override
 	public boolean onSingleTapConfirmed(MotionEvent event) {//put the getX and getY local variables
+		/*
 		float locationOfX = event.getX();
 		float locationOfY = event.getY();
 
@@ -572,6 +596,43 @@ public class brailleKeyboard extends InputMethodService implements
 			isRight =! isRight;
 			Log.d(DEBUG_TAG, "Right onSingleTapConfirmed occurred.");
 
+		}*/
+
+		/*
+		//put the getX and getY local variables
+		float locationOfX = event.getX();
+
+		float YAxis = (mWidth/2);
+
+		isSinglePress = true;
+		if (locationOfX > YAxis){
+			isRight = true;
+			//isSinglePress = true;
+		}
+
+		if (locationOfX < YAxis){
+			isLeft = true;
+
+		}
+		*/
+
+		if(isLeft&&isSinglePress){
+			//getCurrentInputConnection().setComposingText("", -1);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT);
+			Log.d(DEBUG_TAG, "Left onDown < Back Cursor");
+			isLeft=false;
+			isSinglePress=false;
+			//onLeftEvent(event);
+			//return true;
+		}
+		else if(isRight&&isSinglePress){
+			//getCurrentInputConnection().commitText("", 2);
+			sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_RIGHT);
+			Log.d(DEBUG_TAG, "Right onDown > Forward Cursor");
+			isRight=false;
+			isSinglePress=false;
+			//onRightEvent(event);
+			//return true;
 		}
 
 		return true;
@@ -595,7 +656,7 @@ public class brailleKeyboard extends InputMethodService implements
 		}
 		else //ERROR
 		{
-			//mTTs.playEarcon("error", TextToSpeech.QUEUE_FLUSH, null);
+			mTTS.playEarcon("error", TextToSpeech.QUEUE_FLUSH, null);
 			//Toast.makeText(this, "Error: TTS not avaliable. Check your device settings.", Toast.LENGTH_LONG).show();
 		}
 
@@ -620,10 +681,6 @@ public class brailleKeyboard extends InputMethodService implements
 	@Override
 	public View onCreateInputView()
 	{
-		if(!mttsloaded)
-		{
-			mTTS = new TextToSpeech(this, this); //wait for TTS init
-		}
 
 		// inflate the Overlay and sets the touch listener
 		mInputView = (View) getLayoutInflater().inflate(R.layout.keyboardui, null);
@@ -672,6 +729,7 @@ public class brailleKeyboard extends InputMethodService implements
 				if (action == MotionEvent.ACTION_UP) {
 					Log.d(DEBUG_TAG, "Finger Raised");
 					isDone = true;
+					performAction();
 				}
 
 				else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
@@ -689,19 +747,19 @@ public class brailleKeyboard extends InputMethodService implements
 	public void onCreate() {
 		super.onCreate();
 
+
+
+		// clipboard manager
+		clippedText = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+
 		// register broadcast receiver
 		registerReceiver(mBTReceiver, new IntentFilter(AmarinoIntent.ACTION_RECEIVED));
 		registerReceiver(mBTReceiver, new IntentFilter(AmarinoIntent.ACTION_CONNECTED));
 
 		// connects to BT module
 		Amarino.connect(getApplicationContext(), DEVICE_ADDRESS);
-		shake = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-		// clipboard manager
-		clippedText = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
 
 		// text box contents
-		//textContents = (EditText)getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		//mTTS.speak("m Brailler keyboard ready", TextToSpeech.QUEUE_ADD, null);
 
@@ -740,33 +798,32 @@ public class brailleKeyboard extends InputMethodService implements
 		}
 	}
 
-	public String textEditingMenu(int data, String doAction) {
+	public String textEditingMenu(int data) {
 
 		//cut, copy, paste, cancel (which will loop through the options until the scrolling finger released)
 		//will pass the appropriate function on to be carried out in performTextEditing
 
 		int function=Math.abs(data);
-		doAction = "";
 
 		if (data > 0 && data <= 40)
 		{
 			if (function % 40 == 1) {
-				doAction="Cancel";
+				doScrollAction="Cancel";
 				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Paste";
+				doScrollAction="Paste";
 				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
-				doAction="Copy";
+				doScrollAction="Copy";
 				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
-				doAction="Cut";
+				doScrollAction="Cut";
 				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
@@ -777,22 +834,22 @@ public class brailleKeyboard extends InputMethodService implements
 			function= 40-function;
 
 			if (function % 40 == 1) {
-				doAction="Cancel";
+				doScrollAction="Cancel";
 				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Paste";
+				doScrollAction="Paste";
 				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
-				doAction="Copy";
+				doScrollAction="Copy";
 				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
-				doAction="Cut";
+				doScrollAction="Cut";
 				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
@@ -803,22 +860,22 @@ public class brailleKeyboard extends InputMethodService implements
 			function = function-40;
 
 			if (function % 40 == 1) {
-				doAction="Cancel";
+				doScrollAction="Cancel";
 				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Paste";
+				doScrollAction="Paste";
 				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
-				doAction="Copy";
+				doScrollAction="Copy";
 				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
-				doAction="Cut";
+				doScrollAction="Cut";
 				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
@@ -829,60 +886,27 @@ public class brailleKeyboard extends InputMethodService implements
 			function = Math.abs(function)-40;
 
 			if (function % 40 == 1) {
-				doAction="Cancel";
+				doScrollAction="Cancel";
 				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Paste";
+				doScrollAction="Paste";
 				mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Paste");
 			}
 			else if (function % 20 == 1) {
-				doAction="Copy";
+				doScrollAction="Copy";
 				mTTS.speak("Copy", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Copy");
 			}
 			else if (function % 10 == 1) {
-				doAction="Cut";
+				doScrollAction="Cut";
 				mTTS.speak("Cut", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "Cut");
 			}
 		}
-		return doAction;
-	}
-
-	public void performTextEditing(String function,boolean isDone)
-	{
-		int start=0;
-		int finish=0;
-		String doAction=textEditingMenu(0,function);
-
-		if (isDone) {
-		switch (doAction) {
-			case "Cut":
-				Log.d(DEBUG_TAG, "Cut Done");
-				cutText(start, finish);
-				break;
-
-			case "Copy":
-				Log.d(DEBUG_TAG, "Copy Done");
-				copyText(start, finish);
-				break;
-
-			case "Paste":
-				Log.d(DEBUG_TAG, "Paste Done");
-				pasteText(start, finish);
-				break;
-
-			case "Cancel":
-				break;
-
-			default:
-				break;
-		}
-	}
-
+		return doScrollAction;
 	}
 
 	public void cutText(int start, int finish){
@@ -904,47 +928,50 @@ public class brailleKeyboard extends InputMethodService implements
 	public void pasteText(int start, int finish) {
 		shake.vibrate(40);
 		// Checks to see if the clip item contains an Intent, by testing to see if getIntent() returns null
-		Intent pasteIntent = clippedText.getPrimaryClip().getItemAt(0).getIntent();
+		//Intent pasteIntent = clippedText.getPrimaryClip().getItemAt(0).getIntent();
 
-		if (pasteIntent != null) {
+		//if (pasteIntent != null) {
 
 
 			mTTS.speak("Paste", TextToSpeech.QUEUE_ADD, null);
 			// handle the Intent
 			Log.d(DEBUG_TAG, "Pasted");
 
-		} else {
+		//} else {
 
 			mTTS.speak("Nothing to paste", TextToSpeech.QUEUE_ADD, null);
 			// ignore the clipboard, or issue an error if your application was expecting an Intent to be
 			// on the clipboard
 			Log.d(DEBUG_TAG, "not pasted");
-		}
+		//}
 	}
 
-	public int granularityMenu(int data, boolean isDone){
+	public int granularityMenu(int data){
 
 		//letter, word, sentence select granularity (which will loop through the options until the scrolling finger is released)
 
 		int function=Math.abs(data);
-		String doAction="";
 
 		if (data > 0 && data <= 40)
 		{
 			if (function % 40 == 1) {
-				doAction="Cancel";
+				doScrollAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Sentence";
+				doScrollAction="Sentence";
+				mTTS.speak("Sentence", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "sentence");
 			}
 			else if (function % 20 == 1) {
-				doAction="Word";
+				doScrollAction="Word";
+				mTTS.speak("Word", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "word");
 			}
 			else if (function % 10 == 1) {
-				doAction="Letter";
+				doScrollAction="Letter";
+				mTTS.speak("Letter", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "letter");
 			}
 		}
@@ -952,21 +979,24 @@ public class brailleKeyboard extends InputMethodService implements
 		else if (data <=0 && data >= -40)
 		{
 			function= 40-function;
-
-			if (function % 40 == 1 || function == 0) {
-				doAction="Cancel";
+			if (function % 40 == 1) {
+				doScrollAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Sentence";
+				doScrollAction="Sentence";
+				mTTS.speak("Sentence", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "sentence");
 			}
 			else if (function % 20 == 1) {
-				doAction="Word";
+				doScrollAction="Word";
+				mTTS.speak("Word", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "word");
 			}
 			else if (function % 10 == 1) {
-				doAction="Letter";
+				doScrollAction="Letter";
+				mTTS.speak("Letter", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "letter");
 			}
 		}
@@ -974,21 +1004,24 @@ public class brailleKeyboard extends InputMethodService implements
 		else if (data > 40)
 		{
 			function = function-40;
-
-			if (function % 40 == 1 || function == 0) {
-				doAction="Cancel";
+			if (function % 40 == 1) {
+				doScrollAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Sentence";
+				doScrollAction="Sentence";
+				mTTS.speak("Sentence", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "sentence");
 			}
 			else if (function % 20 == 1) {
-				doAction="Word";
+				doScrollAction="Word";
+				mTTS.speak("Word", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "word");
 			}
 			else if (function % 10 == 1) {
-				doAction="Letter";
+				doScrollAction="Letter";
+				mTTS.speak("Letter", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "letter");
 			}
 		}
@@ -996,47 +1029,25 @@ public class brailleKeyboard extends InputMethodService implements
 		else if (data < -40)
 		{
 			function = Math.abs(function)-40;
-
-			if (function % 40 == 1 || function == 0) {
-				doAction="Cancel";
+			if (function % 40 == 1) {
+				doScrollAction="Cancel";
+				mTTS.speak("Cancel", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "cancel");
 			}
 			else if (function % 30 == 1) {
-				doAction="Sentence";
+				doScrollAction="Sentence";
+				mTTS.speak("Sentence", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "sentence");
 			}
 			else if (function % 20 == 1) {
-				doAction="Word";
+				doScrollAction="Word";
+				mTTS.speak("Word", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "word");
 			}
 			else if (function % 10 == 1) {
-				doAction="Letter";
+				doScrollAction="Letter";
+				mTTS.speak("Letter", TextToSpeech.QUEUE_ADD, null);
 				Log.d(DEBUG_TAG, "letter");
-			}
-		}
-
-		if (isDone) {
-			switch (doAction) {
-				case "Letter":
-					letterGranularity();
-					Log.d(DEBUG_TAG, "Letter Done");
-					break;
-
-				case "Word":
-					wordGranularity();
-					Log.d(DEBUG_TAG, "Word Done");
-					break;
-
-				case "Sentence":
-					sentenceGranularity();
-					Log.d(DEBUG_TAG, "Sentence Done");
-					break;
-
-				case "Cancel":
-					break;
-
-				default:
-					break;
 			}
 		}
 			return function;
@@ -1059,6 +1070,63 @@ public class brailleKeyboard extends InputMethodService implements
 		shake.vibrate(40);
 		//mTTS.speak("By sentence", TextToSpeech.QUEUE_ADD, null);
 		//Log.d(DEBUG_TAG, "By sentence!!!!!!!!!!");
+	}
+
+	public void performAction() {
+		int start = 0;
+		int finish = 0;
+
+		if (isDone) {
+			switch (doScrollAction) {
+						case "Letter":
+							letterGranularity();
+							Log.d(DEBUG_TAG, "Letter Done");
+							shake.vibrate(70);
+							mTTS.speak("Selection set to letter", TextToSpeech.QUEUE_ADD, null);
+							break;
+
+						case "Word":
+							wordGranularity();
+							Log.d(DEBUG_TAG, "Word Done");
+							shake.vibrate(70);
+							mTTS.speak("Selection set to word", TextToSpeech.QUEUE_ADD, null);
+							break;
+
+						case "Sentence":
+							sentenceGranularity();
+							Log.d(DEBUG_TAG, "Sentence Done");
+							shake.vibrate(70);
+							mTTS.speak("Selection set to sentence", TextToSpeech.QUEUE_ADD, null);
+							break;
+
+						case "Cut":
+							cutText(start, finish);
+							Log.d(DEBUG_TAG, "Cut Done");
+							shake.vibrate(70);
+							mTTS.speak("Cut Complete", TextToSpeech.QUEUE_ADD, null);
+							break;
+
+						case "Copy":
+							copyText(start, finish);
+							Log.d(DEBUG_TAG, "Copy Done");
+							shake.vibrate(70);
+							mTTS.speak("Copy Complete", TextToSpeech.QUEUE_ADD, null);
+							break;
+
+						case "Paste":
+							pasteText(start, finish);
+							Log.d(DEBUG_TAG, "Paste Done");
+							shake.vibrate(70);
+							mTTS.speak("Paste Complete", TextToSpeech.QUEUE_ADD, null);
+							break;
+
+						case "Cancel":
+							break;
+
+						default:
+							break;
+			}
+		}
 	}
 
 	@SuppressLint("DefaultLocale")
