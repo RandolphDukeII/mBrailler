@@ -96,7 +96,7 @@ public class brailleKeyboard extends InputMethodService implements
 	private GestureDetectorCompat mDetector;
 
 	//Vibration Settings
-	public static Vibrator shake;
+	private Vibrator shake = null;
 	//=(Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
 	//Text Clipboard
@@ -107,7 +107,7 @@ public class brailleKeyboard extends InputMethodService implements
 	public EditText textContents;
 
 	// tts vars
-	static public TextToSpeech mTTS;
+	static public TextToSpeech mTTS=null;
 	private boolean mttsloaded = false;
 
 	private Map <Integer, String> byteToKeyboardCharacter = new HashMap<Integer, String>();
@@ -338,7 +338,7 @@ public class brailleKeyboard extends InputMethodService implements
 			Log.d(DEBUG_TAG, "Left onLongPress occurred.");
 			//mInputView.setContentDescription("Left thumb held.");
 			shake.vibrate(40);
-			mTTS.speak("Scroll with your right thumb for granularity.", TextToSpeech.QUEUE_ADD, null);
+			mTTS.speak("Scroll with your right thumb for granularity.", TextToSpeech.QUEUE_FLUSH, null);
 			//scrollingDone = true;
 		}
 
@@ -656,7 +656,7 @@ public class brailleKeyboard extends InputMethodService implements
 		}
 		else //ERROR
 		{
-			mTTS.playEarcon("error", TextToSpeech.QUEUE_FLUSH, null);
+			//mTTS.playEarcon("error", TextToSpeech.QUEUE_FLUSH, null);
 			//Toast.makeText(this, "Error: TTS not avaliable. Check your device settings.", Toast.LENGTH_LONG).show();
 		}
 
@@ -681,6 +681,13 @@ public class brailleKeyboard extends InputMethodService implements
 	@Override
 	public View onCreateInputView()
 	{
+
+		if(!mttsloaded)
+		{
+			mTTS = new TextToSpeech(this, this); //wait for TTS init
+		}
+
+		shake = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
 		// inflate the Overlay and sets the touch listener
 		mInputView = (View) getLayoutInflater().inflate(R.layout.keyboardui, null);
@@ -747,7 +754,7 @@ public class brailleKeyboard extends InputMethodService implements
 	public void onCreate() {
 		super.onCreate();
 
-
+		//mTTS=(TextToSpeech)getSystemService(Context.ACCESSIBILITY_SERVICE);
 
 		// clipboard manager
 		clippedText = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
@@ -1056,19 +1063,19 @@ public class brailleKeyboard extends InputMethodService implements
 
 	public void letterGranularity(){
 		shake.vibrate(40);
-		//mTTS.speak("By Letter", TextToSpeech.QUEUE_ADD, null);
+		mTTS.speak("By Letter", TextToSpeech.QUEUE_ADD, null);
 		//Log.d(DEBUG_TAG, "By Letter!!!!!!!!!!!");
 	}
 
 	public void wordGranularity(){
 		shake.vibrate(40);
-		//mTTS.speak("By word", TextToSpeech.QUEUE_ADD, null);
+		mTTS.speak("By word", TextToSpeech.QUEUE_ADD, null);
 		//Log.d(DEBUG_TAG, "By Word!!!!!!!!!!!!!");
 	}
 
 	public void sentenceGranularity(){
 		shake.vibrate(40);
-		//mTTS.speak("By sentence", TextToSpeech.QUEUE_ADD, null);
+		mTTS.speak("By sentence", TextToSpeech.QUEUE_ADD, null);
 		//Log.d(DEBUG_TAG, "By sentence!!!!!!!!!!");
 	}
 
@@ -1121,6 +1128,8 @@ public class brailleKeyboard extends InputMethodService implements
 							break;
 
 						case "Cancel":
+							Log.d(DEBUG_TAG, "Cancel Done");
+							shake.vibrate(70);
 							break;
 
 						default:
